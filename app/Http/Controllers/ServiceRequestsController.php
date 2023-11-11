@@ -64,6 +64,7 @@ class ServiceRequestsController extends Controller
             $companyId = DB::table('company')->insertGetId([
                 'company_name' => $requestedCompany->req_company_name,
                 'company_address' => $requestedCompany->req_address,
+                'company_phone' => $requestedCompany->req_number,
             ]);
 
             $password = rand(); // Set the default password

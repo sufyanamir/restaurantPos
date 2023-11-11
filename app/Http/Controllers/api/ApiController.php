@@ -1429,7 +1429,7 @@ class ApiController extends Controller
                 'req_company_name' => 'required|string|max:255',
                 'req_email' => 'required|email|max:255|unique:users,email|unique:service_requests,req_email',
                 'req_address' => 'required|string|max:255',
-                'req_number' => 'required|integer',
+                'req_number' => 'required|string',
             ]);
 
             // Create a new ServiceRequests instance and fill it with the validated data
