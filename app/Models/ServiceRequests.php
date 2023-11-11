@@ -18,6 +18,8 @@ class ServiceRequests extends Model
         'req_company_name',
         'req_email',
         'req_address',
+        'req_address',
+        'req_number',
     ];
     public $timestamps = true;
     
