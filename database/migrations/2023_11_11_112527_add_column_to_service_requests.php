@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('service_requests', function (Blueprint $table) {
-            $table->integer('req_number');
+            $table->bigInteger('req_number');
         });
     }
 
