@@ -19,6 +19,7 @@
                     <th>@lang('lang.company_name')</th>
                     <th>@lang('lang.email')</th>
                     <th>@lang('lang.address')</th>
+                    <th>@lang('lang.phone')</th>
                     <th>@lang('lang.action')</th>
                 </tr>
             </thead>
@@ -32,6 +33,7 @@
                     <td>{{ $item->req_company_name }}</td>
                     <td>{{ $item->req_email }}</td>
                     <td>{{ $item->req_address }}</td>
+                    <td>{{ $item->req_number }}</td>
                     <td>
                         <form class="d-inline" action="{{ url('/requests/approve/'.$item->req_id) }}" method="post">
                             @csrf
