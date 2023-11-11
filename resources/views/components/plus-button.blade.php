@@ -1,0 +1,1 @@
+<button class="btn btn-info btn-md px-3 {{ $class }}" type="button"  id="{{$addRow}}" name="{{ $name }}" onclick="{{ $onclick }}">{{ $label }}</button>
