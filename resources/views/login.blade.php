@@ -4,9 +4,10 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Scuba Diving</title>
+    <title>Restaurant POS</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{{ asset('assets/bootstrap/bootstrap.min.css') }}">
+    <link rel="icon" type="image/x-icon" href="{{ asset('assets/images/restaurant-logo.png') }}">
     <!-- <script src="https://kit.fontawesome.com/c35c4a5799.js" crossorigin="anonymous"></script> -->
     <!-- <link rel="stylesheet" href="assets/font-web/css/all.css" /> -->
     <script>

@@ -1429,6 +1429,7 @@ class ApiController extends Controller
                 'req_company_name' => 'required|string|max:255',
                 'req_email' => 'required|email|max:255|unique:users,email|unique:service_requests,req_email',
                 'req_address' => 'required|string|max:255',
+                'req_number' => 'required|integer',
             ]);
 
             // Create a new ServiceRequests instance and fill it with the validated data
@@ -1437,6 +1438,7 @@ class ApiController extends Controller
                 'req_company_name' => $validatedData['req_company_name'],
                 'req_email' => $validatedData['req_email'],
                 'req_address' => $validatedData['req_address'],
+                'req_number' => $validatedData['req_number'],
             ]);
 
             // Save the record to the database

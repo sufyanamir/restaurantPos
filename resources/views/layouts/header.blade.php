@@ -10,12 +10,12 @@
     <!-- style -->
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
     <!-- style -->
-    <link rel="icon" type="image/x-icon" href="{{ asset('assets/images/company-logo1.svg') }}">
+    <link rel="icon" type="image/x-icon" href="{{ asset('assets/images/restaurant-logo.png') }}">
     <!-- dataTables -->
     <link rel="stylesheet" href="{{ asset('assets/js/dataTables.min.css') }}">
     <!-- dataTables -->
 
-    <title>Dive Monies</title>
+    <title>Restaturant POS</title>
 
     <style>
         ::-webkit-scrollbar {
@@ -125,7 +125,7 @@
         .openbtn {
             font-size: 20px;
             cursor: pointer;
-            color: #00A3FF;
+            color: rgba(255, 178, 107, 1);
             background-color: transparent;
             padding: 10px 15px;
             border: none;
@@ -136,7 +136,7 @@
     outline: none !important;
 }
         .openbtn:hover {
-            color: #00A3F2;
+            color: rgba(255, 178, 107, 1);
            background-color: transparent;
         }
 
