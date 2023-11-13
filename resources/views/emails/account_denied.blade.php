@@ -22,7 +22,7 @@
         <p><b>Dear</b> {{ $emailData['name'] }}! Your access to our services is denied because of some issue in your provided credentials.</p>
         <br>
         <p>We cannot provide you our service at this moment. <b>Thank You!</b></p>
-        <i>Team <a href="https://scubadiving.thewebconcept.tech/">Dive Monies</a></i>
+        <i>Team <a href="https://scubadiving.thewebconcept.tech/">Restaurant POS</a></i>
     </div>
 </body>
 

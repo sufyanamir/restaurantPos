@@ -19,10 +19,10 @@
 <body>
     <div class="container">
         <img src="{{ $message->embed(public_path().'/assets/images/company-logo2.svg') }}">
-        <p><b>Hello dear!</b> You are getting this email because you are just registered to the <b>Dive Monies</b>. You can login to your account through giving address {{ $emailData['email'] }} and the password is <b>{{ $emailData['password'] }}</b>.</p>
+        <p><b>Hello dear!</b> You are getting this email because you are just registered to the <b>Restaurant POS</b>. You can login to your account through giving address {{ $emailData['email'] }} and the password is <b>{{ $emailData['password'] }}</b>.</p>
         <br>
         <p><b>Thank You!</b></p>
-        <i>Team <a href="https://scubadiving.thewebconcept.tech/">Dive Monies</a></i>
+        <i>Team <a href="https://scubadiving.thewebconcept.tech/">Restaurant POS</a></i>
     </div>
 </body>
 

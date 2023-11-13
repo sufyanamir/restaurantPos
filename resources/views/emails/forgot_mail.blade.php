@@ -22,7 +22,7 @@
         <p><b>Dear</b> {{ $emailData['name'] }}! Your otp for reseting the password is here: <b>{{ $emailData['otp'] }}</b>.</p>
         <br>
         <p>Please use this otp to reset your password. <b>Thank You!</b></p>
-        <i>Team <a href="https://scubadiving.thewebconcept.tech/">Dive Monies</a></i>
+        <i>Team <a href="https://scubadiving.thewebconcept.tech/">Restaurant POS</a></i>
     </div>
 </body>
 
