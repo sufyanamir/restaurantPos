@@ -24,52 +24,223 @@ use App\Models\AdditionalItems;
 use App\Models\Company;
 use App\Models\CompanyExpense;
 use App\Models\imageGallery;
+use App\Models\ProductCategory;
+use App\Models\Products;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rules\Unique;
 
 class ApiController extends Controller
 {
-    protected $appUrl = 'https://scubadiving.thewebconcept.tech/';
+    protected $appUrl = 'https://adminpos.thewebconcept.tech/';
+    //----------------------------------------------------product APIs------------------------------------------------------//
+    //add Product
+    public function getProducts()
+    {
+        $user = Auth::user();
+
+        try {
+            $products = Products::with(['variations', 'add_ons'])
+                ->where('company_id', $user->company_id)
+                ->orderBy('product_id', 'desc')
+                ->get();
+
+            if ($products->count() > 0) {
+                $formattedProducts = $products->map(function ($product) {
+                    $category = ProductCategory::find($product->category_id);
+
+                    return [
+                        'product_id' => $product->product_id,
+                        'company_id' => $product->company_id,
+                        'category' => $category ? $category->category_name : null,
+                        'product_code' => $product->product_code,
+                        'title' => $product->product_name,
+                        'product_image' => $product->product_image,
+                        'app_url' => $product->app_url,
+                        'price' => $product->product_price,
+                        'created_at' => $product->created_at,
+                        'updated_at' => $product->updated_at,
+                        'variations' => $product->variations,
+                        'add_on' => $product->add_ons->map(function ($addOn) {
+                            return [
+                                'addOn_id' => $addOn->addOn_id,
+                                'product_id' => $addOn->product_id,
+                                'title' => $addOn->addOn_name,
+                                'price' => $addOn->addOn_price,
+                                'created_at' => $addOn->created_at,
+                                'updated_at' => $addOn->updated_at,
+                            ];
+                        }),
+                    ];
+                });
+
+                return response()->json(['success' => true, 'data' => ['products' => $formattedProducts]], 200);
+            } else {
+                return response()->json(['success' => false, 'message' => 'No products found'], 404);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+    //add Product
+
+    //add Product
+    public function addProduct(Request $request)
+    {
+        $user = Auth::user();
+
+        try {
+            $validatedData = $request->validate([
+                'product_code' => 'required|string',
+                'product_name' => 'required|string',
+                'upload_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
+                'product_price' => 'nullable|numeric',
+                'category_id' => 'required|numeric',
+                'product_variation' => 'nullable|array',
+                'product_variation.*.variation_name' => 'nullable|string',
+                'product_variation.*.variation_price' => 'nullable|string',
+                'product_addOn' => 'nullable|array',
+                'product_addOn.*.addOn_name' => 'nullable|string',
+                'product_addOn.*.addOn_price' => 'nullable|numeric',
+            ]);
+
+            $existingProduct = Products::where('product_name', $validatedData['product_name'])
+                ->where('product_code', $validatedData['product_code'])
+                ->where('company_id', $user->company_id)
+                ->first();
+
+            if ($existingProduct) {
+                return response()->json(['success' => false, 'message' => 'Product with the same name and code already exists.'], 400);
+            }
+
+            $product = Products::create([
+                'product_code' => $validatedData['product_code'],
+                'product_name' => $validatedData['product_name'],
+                'product_price' => $validatedData['product_price'],
+                'category_id' => $validatedData['category_id'],
+                'company_id' => $user->company_id,
+                'app_url' => $this->appUrl,
+            ]);
+
+            if ($request->hasFile('upload_image')) {
+                $image = $request->file('upload_image');
+                $imageName = time() . '.' . $image->getClientOriginalExtension();
+                $image->storeAs('public/product_images', $imageName); // Adjust storage path as needed
+                $product->service_image = 'storage/product_images/' . $imageName;
+            }
+
+            foreach ($validatedData['product_variation'] as $variation) {
+                if ($variation['variation_name'] !== null || $variation['variation_price'] !== null) {
+                    $product->variations()->create($variation);
+                }
+            }
+
+            // Create product add-ons
+            foreach ($validatedData['product_addOn'] as $addOn) {
+                if ($addOn['addOn_name'] !== null || $addOn['addOn_price'] !== null) {
+                    $product->add_ons()->create($addOn);
+                }
+            }
+
+            return response()->json(['success' => true, 'message' => 'product added successfully!'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+    //add Product
+
+    //get product category
+    public function getProductCategory()
+    {
+        $user = Auth::user();
+
+        try {
+            $productCategories = ProductCategory::where('company_id', $user->company_id)->orderBy('category_id', 'desc')->get();
+
+            if ($productCategories->count() > 0) {
+                return response()->json(['success' => true, 'data' => ['product_categories' => $productCategories]], 200);
+            } else {
+                return response()->json(['success' => false, 'message' => 'No categories found'], 404);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+    //get product category
+
+    //product category
+    public function addProductCategory(Request $request)
+    {
+        $user = Auth::user();
+
+        try {
+            $validatedData = $request->validate([
+                'category_name' => 'required|string',
+                'printer_ip' => 'required|string',
+            ]);
+
+            // Check if the category already exists for the given company_id
+            $category = ProductCategory::firstOrCreate(
+                [
+                    'company_id' => $user->company_id,
+                    'category_name' => $validatedData['category_name'],
+                ],
+                [
+                    'printer_ip' => $validatedData['printer_ip'],
+                ]
+            );
+
+            if ($category->wasRecentlyCreated) {
+                return response()->json(['success' => true, 'message' => 'Product Category added successfully!'], 200);
+            } else {
+                return response()->json(['success' => false, 'message' => 'Category with the same name already exists for this company.'], 400);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+
+    //product category
+    //----------------------------------------------------product APIs------------------------------------------------------//
     //----------------------------------------------------company APIs------------------------------------------------------//
     //get expenses
     public function getCompanyExpenses(Request $request)
-{
-    $user = Auth::user();
+    {
+        $user = Auth::user();
 
-    try {
-        // Get the 'expenseDate' query parameter from the URL
-        $expenseDate = $request->query('expenseDate');
+        try {
+            // Get the 'expenseDate' query parameter from the URL
+            $expenseDate = $request->query('expenseDate');
 
-        if ($expenseDate) {
-            // Validate the 'expenseDate' format (optional, based on your requirements)
-            // You can use Carbon or other date handling libraries for more advanced date validation.
+            if ($expenseDate) {
+                // Validate the 'expenseDate' format (optional, based on your requirements)
+                // You can use Carbon or other date handling libraries for more advanced date validation.
 
-            // Retrieve expenses for the user's company filtered by 'expenseDate'
-            $expenses = CompanyExpense::where('company_id', $user->company_id)
-                ->whereDate('expense_date', $expenseDate)
-                ->orderBy('expense_id', 'desc')
-                ->get();
+                // Retrieve expenses for the user's company filtered by 'expenseDate'
+                $expenses = CompanyExpense::where('company_id', $user->company_id)
+                    ->whereDate('expense_date', $expenseDate)
+                    ->orderBy('expense_id', 'desc')
+                    ->get();
 
-            if ($expenses->isEmpty()) {
-                return response()->json(['success' => false, 'message' => 'No expenses found for the company on the specified date'], 404);
+                if ($expenses->isEmpty()) {
+                    return response()->json(['success' => false, 'message' => 'No expenses found for the company on the specified date'], 404);
+                }
+            } else {
+                // If 'expenseDate' is not provided, retrieve all expenses for the user's company
+                $expenses = CompanyExpense::where('company_id', $user->company_id)->orderBy('expense_id', 'desc')->get();
             }
-        } else {
-            // If 'expenseDate' is not provided, retrieve all expenses for the user's company
-            $expenses = CompanyExpense::where('company_id', $user->company_id)->orderBy('expense_id', 'desc')->get();
+
+            // Format 'expense_date' in the response
+            $formattedExpenses = $expenses->map(function ($expense) {
+                $expense->expense_date = Carbon::parse($expense->expense_date)->format('d M Y');
+                return $expense;
+            });
+
+            return response()->json(['success' => true, 'data' => ['expenses' => $formattedExpenses]], 200);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
-
-        // Format 'expense_date' in the response
-        $formattedExpenses = $expenses->map(function ($expense) {
-            $expense->expense_date = Carbon::parse($expense->expense_date)->format('d M Y');
-            return $expense;
-        });
-
-        return response()->json(['success' => true, 'data' => ['expenses' => $formattedExpenses]], 200);
-    } catch (\Exception $e) {
-        return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
     }
-}
 
 
 

@@ -21,6 +21,12 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 
 Route::middleware('auth:sanctum')->group(function () {
+    //product apis
+    Route::post('/addProductCategory', [ApiController::class, 'addProductCategory']);
+    Route::get('/getProductCategory', [ApiController::class, 'getProductCategory']);
+    Route::post('/addProduct', [ApiController::class, 'addProduct']);
+    Route::get('/getProducts', [ApiController::class, 'getProducts']);
+    //product apis
     //add company social links
     Route::get('/getCompanyExpenses', [ApiController::class, 'getCompanyExpenses']);
     Route::post('/addExpense', [ApiController::class, 'addExpense']);
