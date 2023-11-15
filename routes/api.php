@@ -25,6 +25,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/addProductCategory', [ApiController::class, 'addProductCategory']);
     Route::get('/getProductCategory', [ApiController::class, 'getProductCategory']);
     Route::post('/addProduct', [ApiController::class, 'addProduct']);
+    Route::match(['post', 'get'], '/product/delete/{id}', [ApiController::class, 'deleteProduct']);
     Route::get('/getProducts', [ApiController::class, 'getProducts']);
     //product apis
     //add company social links

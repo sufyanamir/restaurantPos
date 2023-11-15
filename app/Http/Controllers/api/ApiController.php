@@ -34,6 +34,36 @@ class ApiController extends Controller
 {
     protected $appUrl = 'https://adminpos.thewebconcept.tech/';
     //----------------------------------------------------product APIs------------------------------------------------------//
+    //deletee Product
+    public function deleteProduct($id)
+    {
+        try {
+            $product = Products::find($id);
+
+            if (!$product) {
+                return response()->json(['success' => false, 'message' => 'No products found!'], 404);
+            }
+
+            // Delete associated overheads.
+            $product->variations()->delete();
+            $product->add_ons()->delete();
+
+            $path = 'storage/product_images/' . $product->product_image;
+
+            if (File::exists($path)) {
+                File::delete($path);
+            }
+
+            $product->delete();
+
+            return response()->json(['success' => true, 'message' => 'product deleted successfully!'], 200);
+        } catch (\Exception $e) {
+
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 200);
+        }
+    }
+    //deletee Product
+
     //add Product
     public function getProducts()
     {
