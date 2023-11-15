@@ -129,20 +129,50 @@ class ApiController extends Controller
                 $product->service_image = 'storage/product_images/' . $imageName;
             }
 
-            foreach ($validatedData['product_variation'] as $variation) {
-                if ($variation['variation_name'] !== null || $variation['variation_price'] !== null) {
-                    $product->variations()->create($variation);
+            if (isset($validatedData['product_variation']) && is_array($validatedData['product_variation'])) {
+                foreach ($validatedData['product_variation'] as $variation) {
+                    if ($variation['variation_name'] !== null || $variation['variation_price'] !== null) {
+                        $product->variations()->create($variation);
+                    }
                 }
             }
 
-            // Create product add-ons
-            foreach ($validatedData['product_addOn'] as $addOn) {
-                if ($addOn['addOn_name'] !== null || $addOn['addOn_price'] !== null) {
-                    $product->add_ons()->create($addOn);
+            // Check if product_addOn is present before iterating
+            if (isset($validatedData['product_addOn']) && is_array($validatedData['product_addOn'])) {
+                // Create product add-ons
+                foreach ($validatedData['product_addOn'] as $addOn) {
+                    if ($addOn['addOn_name'] !== null || $addOn['addOn_price'] !== null) {
+                        $product->add_ons()->create($addOn);
+                    }
                 }
             }
+            $addedProduct = Products::with('variations', 'add_ons', 'category')->find($product->product_id);
 
-            return response()->json(['success' => true, 'message' => 'product added successfully!'], 200);
+            return response()->json(['success' => true, 'message' => 'product added successfully!', 'data' => [
+                'added_product' => [
+                    'product_id' => $addedProduct->id,
+                    'company_id' => $addedProduct->company_id,
+                    'category' => $addedProduct->category->category_name,
+                    'product_code' => $addedProduct->product_code,
+                    'title' => $addedProduct->product_name,  // Rename product_name to title
+                    'product_image' => $addedProduct->product_image,
+                    'app_url' => $addedProduct->app_url,
+                    'price' => $addedProduct->product_price,
+                    'created_at' => $addedProduct->created_at,
+                    'updated_at' => $addedProduct->updated_at,
+                    'variations' => $addedProduct->variations,
+                    'add_on' => $addedProduct->add_ons->map(function ($addOn) {
+                        return [
+                            'addOn_id' => $addOn->id,
+                            'product_id' => $addOn->product_id,
+                            'title' => $addOn->addOn_name, // Change addOn_name to addon_title
+                            'price' => $addOn->addOn_price,
+                            'created_at' => $addOn->created_at,
+                            'updated_at' => $addOn->updated_at,
+                        ];
+                    }),
+                ],
+            ],], 200);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
@@ -190,8 +220,10 @@ class ApiController extends Controller
                 ]
             );
 
+            $addedCategory = ProductCategory::where('category_id', $category->category_id)->get();
+
             if ($category->wasRecentlyCreated) {
-                return response()->json(['success' => true, 'message' => 'Product Category added successfully!'], 200);
+                return response()->json(['success' => true, 'message' => 'Product Category added successfully!', 'data' => ['added_category' => $addedCategory]], 200);
             } else {
                 return response()->json(['success' => false, 'message' => 'Category with the same name already exists for this company.'], 400);
             }
