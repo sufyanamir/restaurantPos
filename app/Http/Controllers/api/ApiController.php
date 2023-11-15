@@ -126,8 +126,10 @@ class ApiController extends Controller
                 $image = $request->file('upload_image');
                 $imageName = time() . '.' . $image->getClientOriginalExtension();
                 $image->storeAs('public/product_images', $imageName); // Adjust storage path as needed
-                $product->service_image = 'storage/product_images/' . $imageName;
+                $product->product_image = 'storage/product_images/' . $imageName;
             }
+
+            $product->save();
 
             if (isset($validatedData['product_variation']) && is_array($validatedData['product_variation'])) {
                 foreach ($validatedData['product_variation'] as $variation) {
