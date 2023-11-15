@@ -34,6 +34,108 @@ class ApiController extends Controller
 {
     protected $appUrl = 'https://adminpos.thewebconcept.tech/';
     //----------------------------------------------------product APIs------------------------------------------------------//
+    public function updateProduct(Request $request, $id)
+    {
+        $user = Auth::user();
+
+        try {
+            // Validate the request data
+            $validatedData = $request->validate([
+                'product_code' => 'required|string',
+                'product_name' => 'required|string',
+                'upload_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
+                'product_price' => 'nullable|numeric',
+                'category_id' => 'required|numeric',
+                'product_variation' => 'nullable|array',
+                'product_variation.*.variation_name' => 'nullable|string',
+                'product_variation.*.variation_price' => 'nullable|string',
+                'product_addOn' => 'nullable|array',
+                'product_addOn.*.addOn_name' => 'nullable|string',
+                'product_addOn.*.addOn_price' => 'nullable|numeric',
+            ]);
+
+            // Find the existing product by ID
+            $existingProduct = Products::find($id);
+
+            // If the product does not exist, return an error response
+            if (!$existingProduct || $existingProduct->company_id !== $user->company_id) {
+                return response()->json(['success' => false, 'message' => 'Product not found.'], 404);
+            }
+
+            // Update the existing product
+            $existingProduct->fill([
+                'product_code' => $validatedData['product_code'],
+                'product_name' => $validatedData['product_name'],
+                'product_price' => $validatedData['product_price'],
+                'category_id' => $validatedData['category_id'],
+                'app_url' => $this->appUrl,
+            ]);
+
+            // Handle product image update
+            if ($request->hasFile('upload_image')) {
+                $image = $request->file('upload_image');
+                $imageName = time() . '.' . $image->getClientOriginalExtension();
+                $image->storeAs('public/product_images', $imageName); // Adjust storage path as needed
+                $existingProduct->product_image = 'storage/product_images/' . $imageName;
+            }
+
+            $existingProduct->save();
+
+            // Delete existing variations and add-ons
+            $existingProduct->variations()->delete();
+            $existingProduct->add_ons()->delete();
+
+            // Add new variations
+            if (isset($validatedData['product_variation']) && is_array($validatedData['product_variation'])) {
+                foreach ($validatedData['product_variation'] as $variation) {
+                    if ($variation['variation_name'] !== null || $variation['variation_price'] !== null) {
+                        $existingProduct->variations()->create($variation);
+                    }
+                }
+            }
+
+            // Add new add-ons
+            if (isset($validatedData['product_addOn']) && is_array($validatedData['product_addOn'])) {
+                foreach ($validatedData['product_addOn'] as $addOn) {
+                    if ($addOn['addOn_name'] !== null || $addOn['addOn_price'] !== null) {
+                        $existingProduct->add_ons()->create($addOn);
+                    }
+                }
+            }
+
+            // Fetch the updated product with details
+            $updatedProduct = Products::with('variations', 'add_ons', 'category')->find($existingProduct->id);
+
+            return response()->json(['success' => true, 'message' => 'Product updated successfully!', 'data' => [
+                'updated_product' => [
+                    'product_id' => $updatedProduct->product_id,
+                    'company_id' => $updatedProduct->company_id,
+                    'category' => $updatedProduct->category->category_name,
+                    'product_code' => $updatedProduct->product_code,
+                    'title' => $updatedProduct->product_name,
+                    'product_image' => $updatedProduct->product_image,
+                    'app_url' => $updatedProduct->app_url,
+                    'price' => $updatedProduct->product_price,
+                    'created_at' => $updatedProduct->created_at,
+                    'updated_at' => $updatedProduct->updated_at,
+                    'variations' => $updatedProduct->variations,
+                    'add_on' => $updatedProduct->add_ons->map(function ($addOn) {
+                        return [
+                            'addOn_id' => $addOn->id,
+                            'product_id' => $addOn->product_id,
+                            'title' => $addOn->addOn_name,
+                            'price' => $addOn->addOn_price,
+                            'created_at' => $addOn->created_at,
+                            'updated_at' => $addOn->updated_at,
+                        ];
+                    }),
+                ],
+            ],], 200);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+
     //deletee Product
     public function deleteProduct($id)
     {
@@ -182,7 +284,7 @@ class ApiController extends Controller
 
             return response()->json(['success' => true, 'message' => 'product added successfully!', 'data' => [
                 'added_product' => [
-                    'product_id' => $addedProduct->id,
+                    'product_id' => $addedProduct->product_id,
                     'company_id' => $addedProduct->company_id,
                     'category' => $addedProduct->category->category_name,
                     'product_code' => $addedProduct->product_code,

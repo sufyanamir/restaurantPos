@@ -24,7 +24,9 @@ Route::middleware('auth:sanctum')->group(function () {
     //product apis
     Route::post('/addProductCategory', [ApiController::class, 'addProductCategory']);
     Route::get('/getProductCategory', [ApiController::class, 'getProductCategory']);
+
     Route::post('/addProduct', [ApiController::class, 'addProduct']);
+    Route::post('/product/update/{id}', [ApiController::class, 'updateProduct']);
     Route::match(['post', 'get'], '/product/delete/{id}', [ApiController::class, 'deleteProduct']);
     Route::get('/getProducts', [ApiController::class, 'getProducts']);
     //product apis
