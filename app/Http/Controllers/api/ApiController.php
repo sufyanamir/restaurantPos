@@ -22,6 +22,7 @@ use App\Models\Orders;
 use App\Models\OrderItems;
 use App\Models\AdditionalItems;
 use App\Models\Company;
+use App\Models\CompanyBranch;
 use App\Models\CompanyExpense;
 use App\Models\imageGallery;
 use App\Models\ProductCategory;
@@ -33,6 +34,87 @@ use Illuminate\Validation\Rules\Unique;
 class ApiController extends Controller
 {
     protected $appUrl = 'https://adminpos.thewebconcept.tech/';
+    //----------------------------------------------------Branch APIs------------------------------------------------------//
+    // get branch
+    public function getBranches()
+    {
+        $user = Auth::user();
+        try {
+            $branches = CompanyBranch::where('company_id', $user->company_id)->orderBy('branch_id', 'desc')->get();
+
+            if (!$branches) {
+                return response()->json(['success' => false, 'message' => 'No branches found'], 400);
+            }
+
+            return response()->json(['success' => true, 'data' => ['branches' => $branches]], 200);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+    // get branch
+
+    // add branch
+    public function deleteBranch(Request $request, $id)
+    {
+        $user = Auth::user();
+        try {
+            $branch = CompanyBranch::where('branch_id', $id)->where('company_id', $user->company_id)->first();
+
+            if (!$branch) {
+                return response()->json(['success' => false, 'message' => 'No branch found!'], 404);
+            }
+
+            $branch->delete();
+
+            return response()->json(['success' => true, 'message' => 'branch deleted successfully!'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+    // add branch
+
+    // add branch
+    public function addBranch(Request $request)
+    {
+        $user = Auth::user();
+
+        try {
+            $validatedData = $request->validate([
+                'branch_code' => 'required|string',
+                'branch_name' => 'required|string',
+                'branch_email' => 'required|string',
+                'branch_phone' => 'required|numeric',
+                'branch_address' => 'required|string',
+                'branch_manager' => 'required|string',
+            ]);
+
+            $existingBranch = CompanyBranch::where([
+                'company_id' => $user->company_id,
+                'branch_code' => $validatedData['branch_code'],
+            ])->first();
+
+            if ($existingBranch) {
+                return response()->json(['success' => false, 'message' => 'The branch code already exists for this company'], 400);
+            }
+
+            $branch = CompanyBranch::create([
+                'company_id' => $user->company_id,
+                'branch_code' => $validatedData['branch_code'],
+                'branch_name' => $validatedData['branch_name'],
+                'branch_email' => $validatedData['branch_email'],
+                'branch_phone' => $validatedData['branch_phone'],
+                'branch_address' => $validatedData['branch_address'],
+                'branch_manager' => $validatedData['branch_manager'],
+            ]);
+
+            return response()->json(['success' => true, 'message' => 'Branch created successfully!', 'data' => ['added_branch' => $branch]], 200);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+    // add branch
+    //----------------------------------------------------Branch APIs------------------------------------------------------//
+
     //----------------------------------------------------product APIs------------------------------------------------------//
     public function updateProduct(Request $request, $id)
     {
