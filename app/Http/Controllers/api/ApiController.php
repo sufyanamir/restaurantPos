@@ -35,6 +35,38 @@ class ApiController extends Controller
 {
     protected $appUrl = 'https://adminpos.thewebconcept.tech/';
     //----------------------------------------------------Branch APIs------------------------------------------------------//
+    // update branch
+    public function updateBranch(Request $request, $id)
+    {
+        $user = Auth::user();
+        try {
+            
+            $validatedData = $request->validate([
+                'branch_name' => 'required|string',
+                'branch_phone' => 'required|string',
+                'branch_address'  => 'required|string',
+                'branch_manager' => 'required|string',
+            ]);
+            
+            $branch = CompanyBranch::where('branch_id', $id)->where('company_id', $user->company_id)->first();
+            
+            if (!$branch) {
+                return response()->json(['success' => false, 'message' => 'no  branch found'], 404);
+            }
+            
+            $branch->branch_name = $validatedData['branch_name'];
+            $branch->branch_phone = $validatedData['branch_phone'];
+            $branch->branch_address = $validatedData['branch_address'];
+            $branch->branch_manager = $validatedData['branch_manager'];
+
+            $branch->save();
+
+            return  response()->json(['success' => true, 'message' => 'branch updated successfully!', 'data' => $branch], 200);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+    // update branch
     // get branch
     public function getBranches()
     {
@@ -137,7 +169,7 @@ class ApiController extends Controller
             ]);
 
             // Find the existing product by ID
-            $existingProduct = Products::find($id);
+            $existingProduct = Products::where('product_id', $id)->where('company_id', $user->company_id)->first();
 
             // If the product does not exist, return an error response
             if (!$existingProduct || $existingProduct->company_id !== $user->company_id) {
@@ -186,7 +218,7 @@ class ApiController extends Controller
             }
 
             // Fetch the updated product with details
-            $updatedProduct = Products::with('variations', 'add_ons', 'category')->find($existingProduct->id);
+            $updatedProduct = Products::with('variations', 'add_ons', 'category')->find($existingProduct->product_id);
 
             return response()->json(['success' => true, 'message' => 'Product updated successfully!', 'data' => [
                 'updated_product' => [
@@ -203,7 +235,7 @@ class ApiController extends Controller
                     'variations' => $updatedProduct->variations,
                     'add_on' => $updatedProduct->add_ons->map(function ($addOn) {
                         return [
-                            'addOn_id' => $addOn->id,
+                            'addOn_id' => $addOn->addOn_id,
                             'product_id' => $addOn->product_id,
                             'title' => $addOn->addOn_name,
                             'price' => $addOn->addOn_price,

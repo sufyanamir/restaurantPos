@@ -25,6 +25,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/addBranch', [ApiController::class, 'addBranch']);
     Route::match(['post', 'get'], '/branch/delete/{id}', [ApiController::class, 'deleteBranch']);
     Route::get('/getBranches', [ApiController::class, 'getBranches']);
+    Route::post('/branch/update/{id}', [ApiController::class, 'updateBranch']);
     // branch apis
     //product apis
     Route::post('/addProductCategory', [ApiController::class, 'addProductCategory']);
