@@ -25,7 +25,7 @@ class LoginController extends Controller
         if ($user && md5($password) === $user->password) {
             // Check if the user role is 0 or 1
             $userRole = $user->user_role;
-            if ($userRole != 0) {
+            if ($userRole != 'superadmin') {
                 // User role is not allowed to login
                 return response()->json(['error' => 'User role not allowed to login'], 401);
             }
