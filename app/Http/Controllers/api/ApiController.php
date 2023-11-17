@@ -342,6 +342,7 @@ class ApiController extends Controller
                 'upload_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
                 'product_price' => 'nullable|numeric',
                 'category_id' => 'required|numeric',
+                'branch_id' => 'required|numeric',
                 'product_variation' => 'nullable|array',
                 'product_variation.*.variation_name' => 'nullable|string',
                 'product_variation.*.variation_price' => 'nullable|string',
@@ -365,6 +366,7 @@ class ApiController extends Controller
                 'product_price' => $validatedData['product_price'],
                 'category_id' => $validatedData['category_id'],
                 'company_id' => $user->company_id,
+                'branch_id' => $validatedData['branch_id'],
                 'app_url' => $this->appUrl,
             ]);
 
@@ -426,12 +428,18 @@ class ApiController extends Controller
         }
     }
     //add Product
+    //----------------------------------------------------product APIs------------------------------------------------------//
+    //----------------------------------------------------product category APIs------------------------------------------------------//
 
+    //updte product category
+    
+    //updte product category
+    
     //get product category
     public function getProductCategory()
     {
         $user = Auth::user();
-
+        
         try {
             $productCategories = ProductCategory::where('company_id', $user->company_id)->orderBy('category_id', 'desc')->get();
 
@@ -446,7 +454,7 @@ class ApiController extends Controller
     }
     //get product category
 
-    //product category
+    //add product category
     public function addProductCategory(Request $request)
     {
         $user = Auth::user();
@@ -455,8 +463,9 @@ class ApiController extends Controller
             $validatedData = $request->validate([
                 'category_name' => 'required|string',
                 'printer_ip' => 'required|string',
+                'branch_id' => 'required|numeric',
             ]);
-
+            
             // Check if the category already exists for the given company_id
             $category = ProductCategory::firstOrCreate(
                 [
@@ -465,6 +474,7 @@ class ApiController extends Controller
                 ],
                 [
                     'printer_ip' => $validatedData['printer_ip'],
+                    'branch_id' => $validatedData['branch_id'],
                 ]
             );
 
@@ -480,8 +490,10 @@ class ApiController extends Controller
         }
     }
 
-    //product category
-    //----------------------------------------------------product APIs------------------------------------------------------//
+    //add product category
+
+    //----------------------------------------------------product category APIs------------------------------------------------------//
+
     //----------------------------------------------------company APIs------------------------------------------------------//
     //get expenses
     public function getCompanyExpenses(Request $request)
@@ -491,11 +503,11 @@ class ApiController extends Controller
         try {
             // Get the 'expenseDate' query parameter from the URL
             $expenseDate = $request->query('expenseDate');
-
+            
             if ($expenseDate) {
                 // Validate the 'expenseDate' format (optional, based on your requirements)
                 // You can use Carbon or other date handling libraries for more advanced date validation.
-
+                
                 // Retrieve expenses for the user's company filtered by 'expenseDate'
                 $expenses = CompanyExpense::where('company_id', $user->company_id)
                     ->whereDate('expense_date', $expenseDate)
@@ -1278,7 +1290,9 @@ class ApiController extends Controller
             $user = Auth::user();
             $search = $request->input('search'); // Get the 'search' parameter from the request
 
-            $query = User::where('user_role', '2')->where('company_id', $user->company_id);
+            $userRoles = ['manager', 'cashier', 'chef', 'waiter', 'rider'];
+
+            $query = User::whereIn('user_role', $userRoles)->where('company_id', $user->company_id);
 
             // If a 'search' parameter is provided, filter staff by user name
             if (!empty($search)) {
@@ -1286,7 +1300,7 @@ class ApiController extends Controller
             }
             $query->orderBy('id', 'desc');
 
-            $staff = $query->select('id', 'name', 'category as role', 'user_image', 'app_url')->get();
+            $staff = $query->get();
 
             if ($staff->count() > 0) {
                 return response()->json(['success' => true, 'data' => ['staff' => $staff]], 200);
