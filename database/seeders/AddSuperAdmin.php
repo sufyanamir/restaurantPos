@@ -19,7 +19,7 @@ class AddSuperAdmin extends Seeder
             'name' => 'Super Admin',
             'email' => 'superadmin@gmail.com',
             'password' => md5('12345'),
-            'user_role' => '0'
+            'user_role' => 'superadmin'
         ]);
 
         DB::table('users')->insert([
@@ -29,7 +29,7 @@ class AddSuperAdmin extends Seeder
             'company_id' => '1',
             'phone' => '0123456789',
             'address' => 'abcdefghijkl',
-            'user_role' => '1',
+            'user_role' => 'admin',
         ]);
     }
 }

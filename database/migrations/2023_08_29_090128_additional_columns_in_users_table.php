@@ -20,7 +20,10 @@ return new class extends Migration
             $table->string('category')->nullable();
             $table->text('user_image')->nullable();
             $table->text('social_links')->nullable();
-            $table->integer('user_role')->nullable();
+            $table->string('user_role')->nullable();
+            $table->string('user_status')->nullable();
+            $table->text('user_priviledges')->nullable();
+            $table->integer('user_branch')->nullable();
             $table->text('app_url')->nullable();
         });
     }

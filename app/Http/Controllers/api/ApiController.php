@@ -40,20 +40,20 @@ class ApiController extends Controller
     {
         $user = Auth::user();
         try {
-            
+
             $validatedData = $request->validate([
                 'branch_name' => 'required|string',
                 'branch_phone' => 'required|string',
                 'branch_address'  => 'required|string',
                 'branch_manager' => 'required|string',
             ]);
-            
+
             $branch = CompanyBranch::where('branch_id', $id)->where('company_id', $user->company_id)->first();
-            
+
             if (!$branch) {
                 return response()->json(['success' => false, 'message' => 'no  branch found'], 404);
             }
-            
+
             $branch->branch_name = $validatedData['branch_name'];
             $branch->branch_phone = $validatedData['branch_phone'];
             $branch->branch_address = $validatedData['branch_address'];
@@ -1337,11 +1337,14 @@ class ApiController extends Controller
             }
 
             $validatedData = $request->validate([
-                'name' => 'required|string|max:255',
-                'email' => 'required|email|max:255',
-                'phone' => 'required|regex:/^[0-9]+$/|max:20',
-                'address' => 'required|string|max:400',
-                'category' => 'required|string|max:400',
+                'user_name' => 'required|string|max:255',
+                'user_email' => 'required|email|max:255',
+                'user_phone' => 'required|regex:/^[0-9]+$/|max:20',
+                'user_address' => 'required|string|max:400',
+                'user_role' => 'required|string',
+                'user_status'  => 'required|string',
+                'user_priviledges' => 'nullable|string',
+                'user_branch' => 'required|string',
                 'upload_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
                 // 'company_id' => 'required',
                 // Add more validation rules for other fields
@@ -1362,24 +1365,27 @@ class ApiController extends Controller
             }
 
 
-            $fbAcc = $request->input('fb_acc');
-            $igAcc = $request->input('ig_acc');
-            $ttAcc = $request->input('tt_acc');
+            // $fbAcc = $request->input('fb_acc');
+            // $igAcc = $request->input('ig_acc');
+            // $ttAcc = $request->input('tt_acc');
 
-            $socailLinks = "$fbAcc,$igAcc,$ttAcc";
+            // $socailLinks = "$fbAcc,$igAcc,$ttAcc";
 
 
-            $user->name = $validatedData['name'];
-            $user->email = $validatedData['email'];
-            $user->phone = $validatedData['phone'];
-            $user->address = $validatedData['address'];
-            $user->category = $validatedData['category'];
+            $user->name = $validatedData['user_name'];
+            $user->email = $validatedData['user_email'];
+            $user->phone = $validatedData['user_phone'];
+            $user->address = $validatedData['user_address'];
+            $user->address = $validatedData['user_role'];
+            $user->address = $validatedData['user_status'];
+            $user->address = $validatedData['user_priviledges'];
+            $user->address = $validatedData['user_branch'];
             $user->company_id = $user->company_id;
-            $user->social_links = $socailLinks;
+            // $user->social_links = $socailLinks;
             $user->app_url = $this->appUrl;
             $user->update();
 
-            return response()->json(['success' => true, 'message' => 'Staff updated successfully!'], 200);
+            return response()->json(['success' => true, 'message' => 'Staff updated successfully!', 'data' => ['updated_staff' => $user]], 200);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
@@ -1392,30 +1398,35 @@ class ApiController extends Controller
 
         try {
             $validatedData = $request->validate([
-                'name' => 'required|string|max:255',
-                'email' => 'required|email|max:255|unique:users,email',
-                'phone' => 'required|regex:/^[0-9]+$/|max:20',
-                'address' => 'required|string|max:400',
-                'category' => 'required|string|max:400',
+                'user_name' => 'required|string|max:255',
+                'user_email' => 'required|email|max:255|unique:users,email',
+                'user_phone' => 'required|regex:/^[0-9]+$/|max:20',
+                'user_address' => 'required|string|max:400',
+                'user_role' => 'required|string',
+                'user_status'  => 'required|string',
+                'user_priviledges' => 'nullable|string',
+                'user_branch' => 'required|string',
                 'upload_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
                 // 'company_id' => 'required',
                 // Add more validation rules for other fields
             ]);
-            $fbAcc = $request->input('fb_acc');
-            $igAcc = $request->input('ig_acc');
-            $ttAcc = $request->input('tt_acc');
+            // $fbAcc = $request->input('fb_acc');
+            // $igAcc = $request->input('ig_acc');
+            // $ttAcc = $request->input('tt_acc');
             $password = rand();
-            $socailLinks = "$fbAcc,$igAcc,$ttAcc";
+            // $socailLinks = "$fbAcc,$igAcc,$ttAcc";
             $user = Auth::user();
             $dataToInsert = [
-                'name' => $validatedData['name'],
-                'email' => $validatedData['email'],
-                'phone' => $validatedData['phone'],
-                'address' => $validatedData['address'],
-                'category' => $validatedData['category'],
+                'name' => $validatedData['user_name'],
+                'email' => $validatedData['user_email'],
+                'phone' => $validatedData['user_phone'],
+                'address' => $validatedData['user_address'],
+                'user_role' => $validatedData['user_role'],
+                'user_status' => $validatedData['user_status'],
+                'user_priviledges' => $validatedData['user_priviledges'],
+                'user_branch' => $validatedData['user_branch'],
                 'company_id' => $user->company_id,
-                'social_links' => $socailLinks,
-                'user_role' => '2',
+                // 'social_links' => $socailLinks,
                 'app_url' => $this->appUrl,
                 'password' => md5($password),
                 // Add other fields as needed
@@ -1425,7 +1436,7 @@ class ApiController extends Controller
                 $dataToInsert['user_image'] = $validatedData['upload_image'];
             }
 
-            DB::table('users')->insert($dataToInsert);
+            $addedStaff = DB::table('users')->insert($dataToInsert);
 
 
             if ($request->hasFile('upload_image')) {
@@ -1454,19 +1465,19 @@ class ApiController extends Controller
             }
 
             $emailData = [
-                'email' => $validatedData['email'],
+                'email' => $validatedData['user_email'],
                 'password' => $password,
             ];
             $mail = new StaffRegistrationMail($emailData);
 
             try {
-                Mail::to($validatedData['email'])->send($mail);
+                Mail::to($validatedData['user_email'])->send($mail);
             } catch (\Exception $e) {
                 return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
             }
 
             // Optionally, you can redirect back with a success message
-            return response()->json(['success' => true, 'message' => 'Staff added successfully!'], 200);
+            return response()->json(['success' => true, 'message' => 'Staff added successfully!', 'data' => ['add_staff' => $dataToInsert]], 200);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
@@ -1842,7 +1853,7 @@ class ApiController extends Controller
             }
 
             $userRole = $user->user_role;
-            if ($userRole != 1) {
+            if ($userRole != 'admin') {
                 // User role is not allowed to login
                 return response()->json(['message' => 'User role not allowed to login'], 401);
             }
@@ -2001,11 +2012,6 @@ class ApiController extends Controller
     public function getUserDetails(Request $request)
     {
         $user = $request->user(); // This will give you the authenticated user
-
-        $userRoleLabel = ($user->user_role == 1) ? 'admin' : ($user->user_role == 2 ? 'staff' : 'unknown');
-
-        // Update the user_role field with the label
-        $user->user_role = $userRoleLabel;
 
         $company = Company::find($user->company_id);
         $user->company_name = $company ? $company->company_name : 'Unknown company';

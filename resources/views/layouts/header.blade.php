@@ -225,14 +225,14 @@
                 <img src="{{ asset('assets/images/d-dark.svg') }}" class="dark-img mb-1 {{Request::is('dashboard') ? 'dark-imgg ':''}}" alt="Image">
                 @lang('lang.dashboard')
             </a>
-            @if (session('user_details')['role'] == '0')
+            @if (session('user_details')['role'] == 'superadmin')
                 <a href="/company" class="link {{Request::is('company') ? 'linkk ':''}}">
                     <img src="{{ asset('assets/images/c-white.svg') }}" class="white-img mb-1 {{Request::is('company') ? 'white-imgg ':''}}" alt="Image">
                     <img src="{{ asset('assets/images/c-dark.svg') }}" class="dark-img mb-1 {{Request::is('company') ? 'dark-imgg ':''}}" alt="Image">
                     @lang('lang.company')
                 </a>
             @endif
-            @if (session('user_details')['role'] == '0')
+            @if (session('user_details')['role'] == 'superadmin')
                 <a href="/requests" class="link {{Request::is('requests') ? 'linkk ':''}}">
                     <img src="{{ asset('assets/images/c-white.svg') }}" class="white-img mb-1 {{Request::is('requests') ? 'white-imgg ':''}}" alt="Image">
                     <img src="{{ asset('assets/images/c-dark.svg') }}" class="dark-img mb-1 {{Request::is('requests') ? 'dark-imgg ':''}}" alt="Image">
