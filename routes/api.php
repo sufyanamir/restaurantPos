@@ -27,10 +27,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/getBranches', [ApiController::class, 'getBranches']);
     Route::post('/branch/update/{id}', [ApiController::class, 'updateBranch']);
     // branch apis
-    //product apis
+    // category apis
     Route::post('/addProductCategory', [ApiController::class, 'addProductCategory']);
+    Route::post('/productCategory/update/{id}', [ApiController::class, 'updateProductCategory']);
     Route::get('/getProductCategory', [ApiController::class, 'getProductCategory']);
+    // category apis
 
+    //product apis
     Route::post('/addProduct', [ApiController::class, 'addProduct']);
     Route::post('/product/update/{id}', [ApiController::class, 'updateProduct']);
     Route::match(['post', 'get'], '/product/delete/{id}', [ApiController::class, 'deleteProduct']);
