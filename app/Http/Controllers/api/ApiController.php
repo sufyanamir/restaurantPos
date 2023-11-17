@@ -1338,7 +1338,7 @@ class ApiController extends Controller
 
             $validatedData = $request->validate([
                 'user_name' => 'required|string|max:255',
-                'user_email' => 'required|email|max:255|unique:users,email',
+                'user_email' => 'required|email|max:255',
                 'user_phone' => 'required|regex:/^[0-9]+$/|max:20',
                 'user_address' => 'required|string|max:400',
                 'user_role' => 'required|string',
@@ -1385,7 +1385,7 @@ class ApiController extends Controller
             $user->app_url = $this->appUrl;
             $user->update();
 
-            return response()->json(['success' => true, 'message' => 'Staff updated successfully!'], 200);
+            return response()->json(['success' => true, 'message' => 'Staff updated successfully!', 'data' => ['updated_staff' => $user]], 200);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
@@ -1436,7 +1436,7 @@ class ApiController extends Controller
                 $dataToInsert['user_image'] = $validatedData['upload_image'];
             }
 
-            DB::table('users')->insert($dataToInsert);
+            $addedStaff = DB::table('users')->insert($dataToInsert);
 
 
             if ($request->hasFile('upload_image')) {
@@ -1477,7 +1477,7 @@ class ApiController extends Controller
             }
 
             // Optionally, you can redirect back with a success message
-            return response()->json(['success' => true, 'message' => 'Staff added successfully!'], 200);
+            return response()->json(['success' => true, 'message' => 'Staff added successfully!', 'data' => ['add_staff' => $dataToInsert]], 200);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
