@@ -432,14 +432,14 @@ class ApiController extends Controller
     //----------------------------------------------------product category APIs------------------------------------------------------//
 
     //updte product category
-    
+
     //updte product category
-    
+
     //get product category
     public function getProductCategory()
     {
         $user = Auth::user();
-        
+
         try {
             $productCategories = ProductCategory::where('company_id', $user->company_id)->orderBy('category_id', 'desc')->get();
 
@@ -465,7 +465,7 @@ class ApiController extends Controller
                 'printer_ip' => 'required|string',
                 'branch_id' => 'required|numeric',
             ]);
-            
+
             // Check if the category already exists for the given company_id
             $category = ProductCategory::firstOrCreate(
                 [
@@ -503,11 +503,11 @@ class ApiController extends Controller
         try {
             // Get the 'expenseDate' query parameter from the URL
             $expenseDate = $request->query('expenseDate');
-            
+
             if ($expenseDate) {
                 // Validate the 'expenseDate' format (optional, based on your requirements)
                 // You can use Carbon or other date handling libraries for more advanced date validation.
-                
+
                 // Retrieve expenses for the user's company filtered by 'expenseDate'
                 $expenses = CompanyExpense::where('company_id', $user->company_id)
                     ->whereDate('expense_date', $expenseDate)
@@ -1390,10 +1390,10 @@ class ApiController extends Controller
             $user->email = $validatedData['user_email'];
             $user->phone = $validatedData['user_phone'];
             $user->address = $validatedData['user_address'];
-            $user->address = $validatedData['user_role'];
-            $user->address = $validatedData['user_status'];
-            $user->address = $validatedData['user_priviledges'];
-            $user->address = $validatedData['user_branch'];
+            $user->user_role = $validatedData['user_role'];
+            $user->user_status = $validatedData['user_status'];
+            $user->user_priviledges = $validatedData['user_priviledges'];
+            $user->user_branch = $validatedData['user_branch'];
             $user->company_id = $user->company_id;
             // $user->social_links = $socailLinks;
             $user->app_url = $this->appUrl;
@@ -1450,7 +1450,7 @@ class ApiController extends Controller
                 $dataToInsert['user_image'] = $validatedData['upload_image'];
             }
 
-            $addedStaff = DB::table('users')->insert($dataToInsert);
+            DB::table('users')->insert($dataToInsert);
 
 
             if ($request->hasFile('upload_image')) {
@@ -1465,7 +1465,6 @@ class ApiController extends Controller
 
                 // Now, if you want to associate the uploaded image filename with the inserted record, you would need to retrieve the last inserted ID.
                 $lastInsertedId = DB::getPdo()->lastInsertId();
-
                 // Update the 'upload_image' field for the inserted record
                 DB::table('users')
                     ->where('id', $lastInsertedId)
@@ -1489,9 +1488,9 @@ class ApiController extends Controller
             } catch (\Exception $e) {
                 return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
             }
-
+            $addedStaff = DB::table('users')->where('id', $lastInsertedId)->first();
             // Optionally, you can redirect back with a success message
-            return response()->json(['success' => true, 'message' => 'Staff added successfully!', 'data' => ['add_staff' => $dataToInsert]], 200);
+            return response()->json(['success' => true, 'message' => 'Staff added successfully!', 'data' => ['added_staff' => $addedStaff]], 200);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
