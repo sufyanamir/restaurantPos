@@ -224,6 +224,7 @@ class ApiController extends Controller
                 'updated_product' => [
                     'product_id' => $updatedProduct->product_id,
                     'company_id' => $updatedProduct->company_id,
+                    'branch_id' => $updatedProduct->branch_id,
                     'category' => $updatedProduct->category->category_name,
                     'product_code' => $updatedProduct->product_code,
                     'title' => $updatedProduct->product_name,
@@ -402,6 +403,7 @@ class ApiController extends Controller
                 'added_product' => [
                     'product_id' => $addedProduct->product_id,
                     'company_id' => $addedProduct->company_id,
+                    'branch_id'  => $addedProduct->branch_id,
                     'category' => $addedProduct->category->category_name,
                     'product_code' => $addedProduct->product_code,
                     'title' => $addedProduct->product_name,  // Rename product_name to title
