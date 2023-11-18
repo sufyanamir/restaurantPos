@@ -299,6 +299,7 @@ class ApiController extends Controller
                     return [
                         'product_id' => $product->product_id,
                         'company_id' => $product->company_id,
+                        'branch_id' => $product->branch_id,
                         'category' => $category ? $category->category_name : null,
                         'product_code' => $product->product_code,
                         'title' => $product->product_name,
