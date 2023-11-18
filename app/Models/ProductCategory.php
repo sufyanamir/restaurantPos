@@ -17,6 +17,7 @@ class ProductCategory extends Model
         'company_id',
         'category_name',
         'printer_ip',
+        'branch_id',
     ];
     
     public $timestamps = true;
