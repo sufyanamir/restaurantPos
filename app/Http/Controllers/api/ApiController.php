@@ -34,6 +34,10 @@ use Illuminate\Validation\Rules\Unique;
 class ApiController extends Controller
 {
     protected $appUrl = 'https://adminpos.thewebconcept.tech/';
+    //----------------------------------------------------Announcements APIs------------------------------------------------------//
+    
+    //----------------------------------------------------Announcements APIs------------------------------------------------------//
+
     //----------------------------------------------------Branch APIs------------------------------------------------------//
     // update branch
     public function updateBranch(Request $request, $id)
@@ -61,6 +65,8 @@ class ApiController extends Controller
 
             $branch->save();
 
+            $branch->branch_status = ($branch->branch_status ==  1) ? 'Active' : 'Inactive'; 
+
             return  response()->json(['success' => true, 'message' => 'branch updated successfully!', 'data' => $branch], 200);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
@@ -76,6 +82,10 @@ class ApiController extends Controller
 
             if (!$branches) {
                 return response()->json(['success' => false, 'message' => 'No branches found'], 400);
+            }
+
+            foreach ($branches as $branch) {
+                $branch->branch_status = ($branch->branch_status == 1) ? 'Active' : 'Inactive'; 
             }
 
             return response()->json(['success' => true, 'data' => ['branches' => $branches]], 200);
@@ -96,9 +106,13 @@ class ApiController extends Controller
                 return response()->json(['success' => false, 'message' => 'No branch found!'], 404);
             }
 
-            $branch->delete();
+            $branch->branch_status = 0;
 
-            return response()->json(['success' => true, 'message' => 'branch deleted successfully!'], 200);
+            $branch->save();
+
+            $branch->branch_status = ($branch->branch_status == 1) ? 'Active' : 'Inactive';
+
+            return response()->json(['success' => true, 'message' => 'branch deleted successfully!', 'data' => ['deleted_branch' => $branch]], 200);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
@@ -139,7 +153,11 @@ class ApiController extends Controller
                 'branch_manager' => $validatedData['branch_manager'],
             ]);
 
-            return response()->json(['success' => true, 'message' => 'Branch created successfully!', 'data' => ['added_branch' => $branch]], 200);
+            $addedBranch = CompanyBranch::find($branch->branch_id);
+
+            $addedBranch->branch_status = ($addedBranch->branch_status == 1) ? 'Active' : 'Inactive';
+
+            return response()->json(['success' => true, 'message' => 'Branch created successfully!', 'data' => ['added_branch' => $addedBranch]], 200);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
@@ -1422,6 +1440,8 @@ class ApiController extends Controller
                 'user_email' => 'required|email|max:255|unique:users,email',
                 'user_phone' => 'required|regex:/^[0-9]+$/|max:20',
                 'user_address' => 'required|string|max:400',
+                'user_password' => 'nullable|string',
+                'is_password' => 'required|boolean',
                 'user_role' => 'required|string',
                 'user_status'  => 'required|string',
                 'user_priviledges' => 'nullable|string',
@@ -1433,7 +1453,7 @@ class ApiController extends Controller
             // $fbAcc = $request->input('fb_acc');
             // $igAcc = $request->input('ig_acc');
             // $ttAcc = $request->input('tt_acc');
-            $password = rand();
+            $password = $validatedData['is_password'] ? $validatedData['user_password'] : rand();
             // $socailLinks = "$fbAcc,$igAcc,$ttAcc";
             $user = Auth::user();
             $dataToInsert = [
@@ -1451,7 +1471,9 @@ class ApiController extends Controller
                 'password' => md5($password),
                 // Add other fields as needed
             ];
-
+            if (!empty($password)) {
+                $dataToInsert['password'] = md5($password);
+            }
             if (!empty($validatedData['upload_image'])) {
                 $dataToInsert['user_image'] = $validatedData['upload_image'];
             }
@@ -2058,7 +2080,7 @@ class ApiController extends Controller
             ]);
 
             // Check the user_role and determine the appropriate folder for image storage
-            if ($user->user_role == 1) {
+            if ($user->user_role == 'admin') {
                 // For user_role 1, update the company image
                 $folder = 'company_images';
                 // You might want to fetch the company details here and update the image accordingly

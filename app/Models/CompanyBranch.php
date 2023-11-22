@@ -21,6 +21,7 @@ class CompanyBranch extends Model
         'branch_phone',
         'branch_address',
         'branch_manager',
+        'branch_status',
     ];
 
     public $timestamps = true;
