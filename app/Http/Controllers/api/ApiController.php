@@ -1894,7 +1894,7 @@ class ApiController extends Controller
             }
 
             $userRole = $user->user_role;
-            if ($userRole != $userRoles) {
+            if (!in_array($userRole, $userRoles)) {
                 // User role is not allowed to login
                 return response()->json(['message' => 'User role not allowed to login'], 401);
             }
