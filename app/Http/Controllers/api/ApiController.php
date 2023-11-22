@@ -35,7 +35,7 @@ class ApiController extends Controller
 {
     protected $appUrl = 'https://adminpos.thewebconcept.tech/';
     //----------------------------------------------------Announcements APIs------------------------------------------------------//
-    
+
     //----------------------------------------------------Announcements APIs------------------------------------------------------//
 
     //----------------------------------------------------Branch APIs------------------------------------------------------//
@@ -65,7 +65,7 @@ class ApiController extends Controller
 
             $branch->save();
 
-            $branch->branch_status = ($branch->branch_status ==  1) ? 'Active' : 'Inactive'; 
+            $branch->branch_status = ($branch->branch_status ==  1) ? 'Active' : 'Inactive';
 
             return  response()->json(['success' => true, 'message' => 'branch updated successfully!', 'data' => $branch], 200);
         } catch (\Exception $e) {
@@ -85,7 +85,7 @@ class ApiController extends Controller
             }
 
             foreach ($branches as $branch) {
-                $branch->branch_status = ($branch->branch_status == 1) ? 'Active' : 'Inactive'; 
+                $branch->branch_status = ($branch->branch_status == 1) ? 'Active' : 'Inactive';
             }
 
             return response()->json(['success' => true, 'data' => ['branches' => $branches]], 200);
@@ -1886,7 +1886,7 @@ class ApiController extends Controller
         try {
             $email = $request->input('email');
             $password = $request->input('password');
-
+            $userRoles = ['admin', 'manager', 'cashier', 'chef', 'waiter', 'rider'];
             $user = User::where('email', $email)->first();
 
             if (!$user || md5($password) !== $user->password) {
@@ -1894,7 +1894,7 @@ class ApiController extends Controller
             }
 
             $userRole = $user->user_role;
-            if ($userRole != 'admin') {
+            if ($userRole != $userRoles) {
                 // User role is not allowed to login
                 return response()->json(['message' => 'User role not allowed to login'], 401);
             }
@@ -2060,6 +2060,87 @@ class ApiController extends Controller
         return response()->json(['success' => true, 'data' => ['user_details' => $user]], 200);
     }
     //get user detail
+
+    //get company  details
+    public function getCompanyDetails(Request $request)
+    {
+        $user = Auth::user();
+        try {
+            $company = Company::find($user->company_id);
+
+            $companyDetails = [
+                'company_id' => $company->company_id,
+                'companyName' => $company->company_name,
+                'email' => $company->company_email,
+                'phone' => $company->company_phone,
+                'addrress' => $company->company_address,
+                'saleTax' => $company->sale_tax,
+                'inventory' => $company->inventory,
+                'currency' => $company->currency,
+                'kitchenSlip' => $company->kitchen_slip,
+                'serviceCharges' => $company->srvice_charges,
+            ];
+
+            return response()->json(['success' => true, 'data' => ['company_details' => $companyDetails]], 200);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+    //get company  details
+
+    //update company details
+    public function updateCompanyDetails(Request $request)
+    {
+        $user = Auth::user();
+        try {
+
+            $validatedData  = $request->validate([
+                'companyName' => 'nullable|string',
+                'email' => 'nullable|string',
+                'phone' => 'nullable|regex:/^[0-9]+$/|max:20',
+                'saleTax' => 'nullable|numeric',
+                'inventory' => 'nullable|string',
+                'currency' => 'nullable|string',
+                'kitchenSlip' => 'nullable|string',
+                'address' => 'nullable|string',
+                'serviceCharges'  => 'nullable|numeric',
+            ]);
+
+            $company = Company::where('company_id', $user->company_id)->first();
+
+            if (!$company) {
+                return response()->json(['success' => false, 'message' => 'company not found'], 404);
+            }
+
+            $company->company_name = $validatedData['companyName'];
+            $company->company_email = $validatedData['email'];
+            $company->company_phone = $validatedData['phone'];
+            $company->sale_tax = $validatedData['saleTax'];
+            $company->inventory = $validatedData['inventory'];
+            $company->currency = $validatedData['currency'];
+            $company->kitchen_slip = $validatedData['kitchenSlip'];
+            $company->company_address = $validatedData['address'];
+            $company->service_charges = $validatedData['serviceCharges'];
+
+            $company->save();
+
+            return response()->json(['success' => true, 'message' => 'company profile updated successfully!', 'data' => ['updated_company' => [
+                'companny_id' => $company->company_id,
+                'companyName' => $company->company_name,
+                'email' => $company->company_email,
+                'phone' => $company->company_phone,
+                'saleTax' => $company->sale_tax,
+                'inventory' => $company->inventory,
+                'currency' => $company->currency,
+                'kitchenSlip' => $company->kitchen_slip,
+                'address' => $company->company_address,
+                'serviceCharges' => $company->service_charges,
+            ]]], 200);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+    //update company details
 
     //update user detail
     public function updateUserDetail(Request $request)

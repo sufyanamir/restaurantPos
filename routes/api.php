@@ -21,6 +21,12 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 
 Route::middleware('auth:sanctum')->group(function () {
+
+    //company apis
+    Route::get('/getCompanyDetails', [ApiController::class, 'getCompanyDetails']);
+    Route::post('/updateCompanyDetails', [ApiController::class, 'updateCompanyDetails']);
+    //company apis
+
     // branch apis
     Route::post('/addBranch', [ApiController::class, 'addBranch']);
     Route::match(['post', 'get'], '/branch/delete/{id}', [ApiController::class, 'deleteBranch']);
