@@ -48,6 +48,11 @@ public function customers()
         'fb_acc',
         'ig_acc',
         'tt_acc',
+        'sale_tax',
+        'inventory',
+        'currency',
+        'kitchen_slip',
+        'service_charges',
     ];
 
     public $timestamps = true;
