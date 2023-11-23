@@ -35,7 +35,12 @@ class User extends Authenticatable
         'user_image',
         'social_links',
         'app_url',
-        'otp'
+        'otp',
+        'country',
+        'state',
+        'city',
+        'language',
+        'zip_code',
     ];
 
     /**

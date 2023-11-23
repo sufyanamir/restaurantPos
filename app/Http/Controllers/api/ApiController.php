@@ -2079,6 +2079,8 @@ class ApiController extends Controller
                 'currency' => $company->currency,
                 'kitchenSlip' => $company->kitchen_slip,
                 'serviceCharges' => $company->service_charges,
+                'app_url' => $company->app_url,
+                'company_image' => $company->company_image,
             ];
 
             return response()->json(['success' => true, 'data' => ['company_details' => $companyDetails]], 200);
@@ -2153,11 +2155,16 @@ class ApiController extends Controller
             }
 
             $validatedData = $request->validate([
-                'name' => 'nullable|string|max:255',
+                'fullName' => 'nullable|string|max:255',
+                'country' => 'nullable|string',
+                'state' => 'nullable|string',
+                'city' => 'nullable|string',
                 'phone' => 'nullable|regex:/^[0-9]+$/|max:20',
+                'zip' => 'nullable|string',
+                'language' => 'nullable|string',
                 'password' => 'nullable',
-                'address' => 'nullable|string|max:400',
                 'upload_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
+                // 'address' => 'nullable|string|max:400',
             ]);
 
             // Check the user_role and determine the appropriate folder for image storage
@@ -2176,8 +2183,13 @@ class ApiController extends Controller
                         $imagePath = $request->file('upload_image')->store("public/$folder");
                         // Update the company_image field with the complete path
                         $company->company_image = str_replace('public/', 'storage/', $imagePath);
+
+                        $user->user_image = str_replace('public/', 'storage/', $imagePath);
+                        
+                        $company->app_url = $this->appUrl;
                         // Save the updated company data to the database
                         $company->save();
+                        $user->save();
                     }
                 }
             } else {
@@ -2195,8 +2207,8 @@ class ApiController extends Controller
             }
 
             // Conditionally update user attributes if they are not null
-            if ($validatedData['name'] !== null) {
-                $user->name = $validatedData['name'];
+            if ($validatedData['fullName'] !== null) {
+                $user->name = $validatedData['fullName'];
             }
 
             if ($validatedData['phone'] !== null) {
@@ -2206,15 +2218,32 @@ class ApiController extends Controller
             if ($validatedData['password'] !== null) {
                 $user->password = md5($validatedData['password']);
             }
-
-            if ($validatedData['address'] !== null) {
-                $user->address = $validatedData['address'];
-            }
-
+            $user->country = $validatedData['country'];
+            $user->state = $validatedData['state'];
+            $user->city = $validatedData['city'];
+            $user->language = $validatedData['language'];
+            $user->zip_code = $validatedData['zip'];
+            // if ($validatedData['address'] !== null) {
+            //     $user->address = $validatedData['address'];
+            // }
             // Save the updated user data to the database
+            $user->app_url = $this->appUrl;
+
             $user->save();
 
-            return response()->json(['success' => true, 'message' => 'Data updated successfully'], 200);
+            return response()->json(['success' => true, 'message' => 'Data updated successfully', 'data' => ['updated_profile' => [
+                'id'  => $user->id,
+                'fullName' => $user->name,
+                'country' => $user->country,
+                'state' => $user->state,
+                'city' => $user->city,
+                'phone' => $user->phone,
+                'zip' => $user->zip,
+                'language' => $user->language,
+                'password' => $user->password,
+                'branch' => $user->user_branch,
+                'user_image' => $user->user_image,
+            ]]], 200);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
