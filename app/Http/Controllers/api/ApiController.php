@@ -2073,12 +2073,12 @@ class ApiController extends Controller
                 'companyName' => $company->company_name,
                 'email' => $company->company_email,
                 'phone' => $company->company_phone,
-                'addrress' => $company->company_address,
+                'address' => $company->company_address,
                 'saleTax' => $company->sale_tax,
                 'inventory' => $company->inventory,
                 'currency' => $company->currency,
                 'kitchenSlip' => $company->kitchen_slip,
-                'serviceCharges' => $company->srvice_charges,
+                'serviceCharges' => $company->service_charges,
             ];
 
             return response()->json(['success' => true, 'data' => ['company_details' => $companyDetails]], 200);
