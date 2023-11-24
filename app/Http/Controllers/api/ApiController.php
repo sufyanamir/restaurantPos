@@ -1423,7 +1423,27 @@ class ApiController extends Controller
             $user->app_url = $this->appUrl;
             $user->update();
 
-            return response()->json(['success' => true, 'message' => 'Staff updated successfully!', 'data' => ['updated_staff' => $user]], 200);
+            return response()->json(['success' => true, 'message' => 'Staff updated successfully!', 'data' => ['updated_staff' => [
+                "id"  => $user->id,
+                "name" => $user->name,
+                "email" => $user->email,
+                "password" => $user->password,
+                "company_id" => $user->company_id,
+                "phone" => $user->phone,
+                "address" => $user->address,
+                "category" => $user->category,
+                "user_image" => $user->user_image,
+                "user_role" => $user->user_role,
+                "user_status" => $user->user_status,
+                "user_priviledges" => json_decode($user->user_priviledges),
+                "user_branch" => $user->user_branch,
+                "app_url" => $user->app_url,
+                "country" => $user->country,
+                "state" => $user->state,
+                "city" => $user->city,
+                "language" => $user->language,
+                "zip_code" => $user->zip_code,
+            ]]], 200);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
@@ -1433,7 +1453,6 @@ class ApiController extends Controller
     //add staff
     public function addStaff(Request $request)
     {
-
         try {
             $validatedData = $request->validate([
                 'user_name' => 'required|string|max:255',
@@ -1441,21 +1460,18 @@ class ApiController extends Controller
                 'user_phone' => 'required|regex:/^[0-9]+$/|max:20',
                 'user_address' => 'required|string|max:400',
                 'user_password' => 'nullable|string',
-                'is_password' => 'required|string',
+                'is_password' => 'required|boolean',
                 'user_role' => 'required|string',
                 'user_status'  => 'required|string',
                 'user_priviledges' => 'nullable|array',
                 'user_branch' => 'required|string',
                 'upload_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
-                // 'company_id' => 'required',
-                // Add more validation rules for other fields
             ]);
-            // $fbAcc = $request->input('fb_acc');
-            // $igAcc = $request->input('ig_acc');
-            // $ttAcc = $request->input('tt_acc');
-            $password = ($validatedData['is_password'] == '1') ? $validatedData['user_password'] : rand();
-            // $socailLinks = "$fbAcc,$igAcc,$ttAcc";
+
+            $password = $validatedData['is_password'] ? $validatedData['user_password'] : rand();
+
             $user = Auth::user();
+
             $dataToInsert = [
                 'name' => $validatedData['user_name'],
                 'email' => $validatedData['user_email'],
@@ -1463,52 +1479,30 @@ class ApiController extends Controller
                 'address' => $validatedData['user_address'],
                 'user_role' => $validatedData['user_role'],
                 'user_status' => $validatedData['user_status'],
-                'user_priviledges' => $validatedData['user_priviledges'],
+                'user_priviledges' => json_encode($validatedData['user_priviledges']), // Assuming user_priviledges is a JSON field in the database
                 'user_branch' => $validatedData['user_branch'],
                 'company_id' => $user->company_id,
-                // 'social_links' => $socailLinks,
                 'app_url' => $this->appUrl,
                 'password' => md5($password),
-                // Add other fields as needed
             ];
-            if (!empty($password)) {
-                $dataToInsert['password'] = md5($password);
-            }
+
             if (!empty($validatedData['upload_image'])) {
-                $dataToInsert['user_image'] = $validatedData['upload_image'];
-            }
-
-            DB::table('users')->insert($dataToInsert);
-
-
-            if ($request->hasFile('upload_image')) {
-                // Get the uploaded file
-                $image = $request->file('upload_image');
-
-                // Generate a unique name for the image
+                // Handle image upload
+                $image = $validatedData['upload_image'];
                 $imageName = time() . '.' . $image->getClientOriginalExtension();
-
-                // Store the image in the specified storage location
-                $image->storeAs('public/staff_images', $imageName); // Adjust storage path as needed
-
-                // Now, if you want to associate the uploaded image filename with the inserted record, you would need to retrieve the last inserted ID.
-                $lastInsertedId = DB::getPdo()->lastInsertId();
-                // Update the 'upload_image' field for the inserted record
-                DB::table('users')
-                    ->where('id', $lastInsertedId)
-                    ->update(['user_image' => 'storage/staff_images/' . $imageName]);
+                $image->storeAs('public/staff_images', $imageName);
+                $dataToInsert['user_image'] = 'storage/staff_images/' . $imageName;
             } else {
-                $lastInsertedId = DB::getPdo()->lastInsertId();
-
-                DB::table('users')
-                    ->where('id', $lastInsertedId)
-                    ->update(['user_image' => 'assets/images/user.png']);
+                $dataToInsert['user_image'] = 'assets/images/user.png';
             }
+
+            $lastInsertedId = DB::table('users')->insertGetId($dataToInsert);
 
             $emailData = [
                 'email' => $validatedData['user_email'],
                 'password' => $password,
             ];
+
             $mail = new StaffRegistrationMail($emailData);
 
             try {
@@ -1516,9 +1510,30 @@ class ApiController extends Controller
             } catch (\Exception $e) {
                 return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
             }
+
             $addedStaff = DB::table('users')->where('id', $lastInsertedId)->first();
-            // Optionally, you can redirect back with a success message
-            return response()->json(['success' => true, 'message' => 'Staff added successfully!', 'data' => ['added_staff' => $addedStaff]], 200);
+
+            return response()->json(['success' => true, 'message' => 'Staff added successfully!', 'data' => ['added_staff' => [
+                "id"  => $addedStaff->id,
+                "name" => $addedStaff->name,
+                "email" => $addedStaff->email,
+                "password" => $addedStaff->password,
+                "company_id" => $addedStaff->company_id,
+                "phone" => $addedStaff->phone,
+                "address" => $addedStaff->address,
+                "category" => $addedStaff->category,
+                "user_image" => $addedStaff->user_image,
+                "user_role" => $addedStaff->user_role,
+                "user_status" => $addedStaff->user_status,
+                "user_priviledges" => json_decode($addedStaff->user_priviledges),
+                "user_branch" => $addedStaff->user_branch,
+                "app_url" => $addedStaff->app_url,
+                "country" => $addedStaff->country,
+                "state" => $addedStaff->state,
+                "city" => $addedStaff->city,
+                "language" => $addedStaff->language,
+                "zip_code" => $addedStaff->zip_code,
+            ]]], 200);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
@@ -1902,7 +1917,27 @@ class ApiController extends Controller
             // Generate a personal access token for the user
             $token = $user->createToken('api-token')->plainTextToken;
 
-            return response()->json(['success' => true, 'message' => 'Login successful!', 'access_token' => $token, 'user_details' => $user], 200);
+            return response()->json(['success' => true, 'message' => 'Login successful!', 'access_token' => $token, 'user_details' => [
+                "id"  => $user->id,
+                "name" => $user->name,
+                "email" => $user->email,
+                "password" => $user->password,
+                "company_id" => $user->company_id,
+                "phone" => $user->phone,
+                "address" => $user->address,
+                "category" => $user->category,
+                "user_image" => $user->user_image,
+                "user_role" => $user->user_role,
+                "user_status" => $user->user_status,
+                "user_priviledges" => json_decode($user->user_priviledges),
+                "user_branch" => $user->user_branch,
+                "app_url" => $user->app_url,
+                "country" => $user->country,
+                "state" => $user->state,
+                "city" => $user->city,
+                "language" => $user->language,
+                "zip_code" => $user->zip_code,
+            ]], 200);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
@@ -2185,7 +2220,7 @@ class ApiController extends Controller
                         $company->company_image = str_replace('public/', 'storage/', $imagePath);
 
                         $user->user_image = str_replace('public/', 'storage/', $imagePath);
-                        
+
                         $company->app_url = $this->appUrl;
                         // Save the updated company data to the database
                         $company->save();
