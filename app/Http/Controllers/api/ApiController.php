@@ -1468,7 +1468,7 @@ class ApiController extends Controller
                 'upload_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
             ]);
 
-            $password = ($validatedData['is_password'] == 1) ? $validatedData['user_password'] : rand();
+            $password = ($validatedData['is_password'] == '1') ? $validatedData['user_password'] : rand();
 
             $user = Auth::user();
 
