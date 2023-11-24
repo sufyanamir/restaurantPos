@@ -1441,7 +1441,7 @@ class ApiController extends Controller
                 'user_phone' => 'required|regex:/^[0-9]+$/|max:20',
                 'user_address' => 'required|string|max:400',
                 'user_password' => 'nullable|string',
-                'is_password' => 'required|boolean',
+                'is_password' => 'required|string',
                 'user_role' => 'required|string',
                 'user_status'  => 'required|string',
                 'user_priviledges' => 'nullable|string',
@@ -1453,7 +1453,7 @@ class ApiController extends Controller
             // $fbAcc = $request->input('fb_acc');
             // $igAcc = $request->input('ig_acc');
             // $ttAcc = $request->input('tt_acc');
-            $password = $validatedData['is_password'] ? $validatedData['user_password'] : rand();
+            $password = ($validatedData['is_password'] == '1') ? $validatedData['user_password'] : rand();
             // $socailLinks = "$fbAcc,$igAcc,$ttAcc";
             $user = Auth::user();
             $dataToInsert = [
