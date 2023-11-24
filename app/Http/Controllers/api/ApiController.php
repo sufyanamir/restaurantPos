@@ -1444,7 +1444,7 @@ class ApiController extends Controller
                 'is_password' => 'required|string',
                 'user_role' => 'required|string',
                 'user_status'  => 'required|string',
-                'user_priviledges' => 'nullable|string',
+                'user_priviledges' => 'nullable|array',
                 'user_branch' => 'required|string',
                 'upload_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
                 // 'company_id' => 'required',
