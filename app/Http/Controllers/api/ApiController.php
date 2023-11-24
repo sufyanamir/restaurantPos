@@ -1460,7 +1460,7 @@ class ApiController extends Controller
                 'user_phone' => 'required|regex:/^[0-9]+$/|max:20',
                 'user_address' => 'required|string|max:400',
                 'user_password' => 'nullable|string',
-                'is_password' => 'required|boolean',
+                'is_password' => 'required|string',
                 'user_role' => 'required|string',
                 'user_status'  => 'required|string',
                 'user_priviledges' => 'nullable|array',
@@ -1468,7 +1468,7 @@ class ApiController extends Controller
                 'upload_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
             ]);
 
-            $password = $validatedData['is_password'] ? $validatedData['user_password'] : rand();
+            $password = ($validatedData['is_password'] == 1) ? $validatedData['user_password'] : rand();
 
             $user = Auth::user();
 
