@@ -1327,7 +1327,27 @@ class ApiController extends Controller
             $staff = $query->get();
 
             if ($staff->count() > 0) {
-                return response()->json(['success' => true, 'data' => ['staff' => $staff]], 200);
+                return response()->json(['success' => true, 'data' => ['staff' => [
+                    "id"  => $staff->id,
+                    "name" => $staff->name,
+                    "email" => $staff->email,
+                    "password" => $staff->password,
+                    "company_id" => $staff->company_id,
+                    "phone" => $staff->phone,
+                    "address" => $staff->address,
+                    "category" => $staff->category,
+                    "user_image" => $staff->user_image,
+                    "user_role" => $staff->user_role,
+                    "user_status" => $staff->user_status,
+                    "user_priviledges" => json_decode($staff->user_priviledges),
+                    "user_branch" => $staff->user_branch,
+                    "app_url" => $staff->app_url,
+                    "country" => $staff->country,
+                    "state" => $staff->state,
+                    "city" => $staff->city,
+                    "language" => $staff->language,
+                    "zip_code" => $staff->zip_code,
+                ]]], 200);
             } else {
                 return response()->json(['success' => false, 'message' => 'No staff found!'], 404);
             }
