@@ -1384,7 +1384,7 @@ class ApiController extends Controller
                 'user_address' => 'required|string|max:400',
                 'user_role' => 'required|string',
                 'user_status'  => 'required|string',
-                'user_priviledges' => 'nullable|string',
+                'user_priviledges' => 'nullable|array',
                 'user_branch' => 'required|string',
                 'upload_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
                 // 'company_id' => 'required',
@@ -1419,7 +1419,7 @@ class ApiController extends Controller
             $user->address = $validatedData['user_address'];
             $user->user_role = $validatedData['user_role'];
             $user->user_status = $validatedData['user_status'];
-            $user->user_priviledges = $validatedData['user_priviledges'];
+            $user->user_priviledges = json_encode($validatedData['user_priviledges']);
             $user->user_branch = $validatedData['user_branch'];
             $user->company_id = $user->company_id;
             // $user->social_links = $socailLinks;
