@@ -2092,7 +2092,27 @@ class ApiController extends Controller
         $company = Company::find($user->company_id);
         $user->company_name = $company ? $company->company_name : 'Unknown company';
         $user->company_image = $company ? $company->company_image : 'No Image';
-        return response()->json(['success' => true, 'data' => ['user_details' => $user]], 200);
+        return response()->json(['success' => true, 'data' => ['user_details' => [
+            "id"  => $user->id,
+            "name" => $user->name,
+            "email" => $user->email,
+            "password" => $user->password,
+            "company_id" => $user->company_id,
+            "phone" => $user->phone,
+            "address" => $user->address,
+            "category" => $user->category,
+            "user_image" => $user->user_image,
+            "user_role" => $user->user_role,
+            "user_status" => $user->user_status,
+            "user_priviledges" => json_decode($user->user_priviledges),
+            "user_branch" => $user->user_branch,
+            "app_url" => $user->app_url,
+            "country" => $user->country,
+            "state" => $user->state,
+            "city" => $user->city,
+            "language" => $user->language,
+            "zip_code" => $user->zip_code,
+        ]]], 200);
     }
     //get user detail
 
