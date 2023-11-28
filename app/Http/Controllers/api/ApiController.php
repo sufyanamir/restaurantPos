@@ -2296,11 +2296,12 @@ class ApiController extends Controller
                 'state' => $user->state,
                 'city' => $user->city,
                 'phone' => $user->phone,
-                'zip' => $user->zip,
+                'zip' => $user->zip_code,
                 'language' => $user->language,
                 'password' => $user->password,
                 'branch' => $user->user_branch,
                 'user_image' => $user->user_image,
+                'app_url' => $user->app_url
             ]]], 200);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
