@@ -18,6 +18,8 @@ class ProductCategory extends Model
         'category_name',
         'printer_ip',
         'branch_id',
+        'category_image',
+        'app_url',
     ];
     
     public $timestamps = true;

@@ -14,7 +14,8 @@ return new class extends Migration
     public function up()
     {
         Schema::table('product_category', function (Blueprint $table) {
-            $table->string('branch_id');
+            $table->text('category_image')->nullable();
+            $table->text('app_url')->nullable();
         });
     }
 
