@@ -465,7 +465,12 @@ class ApiController extends Controller
         $user = Auth::user();
 
         try {
-            $productCategories = ProductCategory::where('company_id', $user->company_id)->orderBy('category_id', 'desc')->get();
+            $productCategories = ProductCategory::where(function ($query) use ($user) {
+                $query->where('company_id', $user->company_id)
+                    ->where('branch_id', $user->user_branch);
+            })->orWhere(function ($query) {
+                $query->where('branch_id', 'all');
+            })->orderBy('category_id', 'desc')->get();
 
             if ($productCategories->count() > 0) {
                 return response()->json(['success' => true, 'data' => ['product_categories' => $productCategories]], 200);
@@ -487,7 +492,8 @@ class ApiController extends Controller
             $validatedData = $request->validate([
                 'category_name' => 'required|string',
                 'printer_ip' => 'required|string',
-                'branch_id' => 'required|numeric',
+                'branch_id' => 'required|string',
+                'upload_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
             ]);
 
             // Check if the category already exists for the given company_id
@@ -499,8 +505,18 @@ class ApiController extends Controller
                 [
                     'printer_ip' => $validatedData['printer_ip'],
                     'branch_id' => $validatedData['branch_id'],
+                    'app_url' => $this->appUrl,
                 ]
             );
+
+            if ($request->hasFile('upload_image')) {
+                $image = $request->file('upload_image');
+                $imageName = time() . '.' . $image->getClientOriginalExtension();
+                $image->storeAs('public/category_images', $imageName); // Adjust storage path as needed
+                $category->category_image = 'storage/category_images/' . $imageName;
+            }
+
+            $category->save(); // Save the model after updating the image field
 
             $addedCategory = ProductCategory::where('category_id', $category->category_id)->get();
 
