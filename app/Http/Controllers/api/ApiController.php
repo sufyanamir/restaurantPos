@@ -257,8 +257,8 @@ class ApiController extends Controller
                         return [
                             'addOn_id' => $addOn->addOn_id,
                             'product_id' => $addOn->product_id,
-                            'title' => $addOn->addOn_name,
-                            'price' => $addOn->addOn_price,
+                            'addOn_name' => $addOn->addOn_name,
+                            'addOn_price' => $addOn->addOn_price,
                             'created_at' => $addOn->created_at,
                             'updated_at' => $addOn->updated_at,
                         ];
@@ -333,8 +333,8 @@ class ApiController extends Controller
                             return [
                                 'addOn_id' => $addOn->addOn_id,
                                 'product_id' => $addOn->product_id,
-                                'title' => $addOn->addOn_name,
-                                'price' => $addOn->addOn_price,
+                                'addOn_name' => $addOn->addOn_name,
+                                'addOn_price' => $addOn->addOn_price,
                                 'created_at' => $addOn->created_at,
                                 'updated_at' => $addOn->updated_at,
                             ];
@@ -439,8 +439,8 @@ class ApiController extends Controller
                         return [
                             'addOn_id' => $addOn->id,
                             'product_id' => $addOn->product_id,
-                            'title' => $addOn->addOn_name, // Change addOn_name to addon_title
-                            'price' => $addOn->addOn_price,
+                            'addOn_name' => $addOn->addOn_name, // Change addOn_name to addon_title
+                            'addOn_price' => $addOn->addOn_price,
                             'created_at' => $addOn->created_at,
                             'updated_at' => $addOn->updated_at,
                         ];
