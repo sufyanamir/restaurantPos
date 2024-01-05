@@ -75,7 +75,7 @@ class CompanyController extends Controller
                 'address' => $validatedData['admin_address'],
                 'password' => md5($validatedData['password']),
                 'company_id' => $companyID,
-                'user_role' => '1',
+                'user_role' => 'admin',
                 'app_url' => 'https://scubadiving.thewebconcept.tech/',
                 // Add other fields as needed
             ]);
