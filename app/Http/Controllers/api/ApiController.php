@@ -465,12 +465,21 @@ class ApiController extends Controller
         $user = Auth::user();
 
         try {
+            // $productCategories = ProductCategory::where(function ($query) use ($user) {
+            //     $query->where('company_id', $user->company_id)
+            //         ->where('branch_id', $user->user_branch);
+            // })->orWhere(function ($query) {
+            //     $query->where('branch_id', 'all');
+            // })->orderBy('category_id', 'desc')->get();
+            // Old one 
+
             $productCategories = ProductCategory::where(function ($query) use ($user) {
-                $query->where('company_id', $user->company_id)
-                    ->where('branch_id', $user->user_branch);
-            })->orWhere(function ($query) {
-                $query->where('branch_id', 'all');
-            })->orderBy('category_id', 'desc')->get();
+                $query->where('company_id', $user->company_id);
+            
+                
+            })->orderBy('category_name', 'asc')->get();
+
+            
 
             if ($productCategories->count() > 0) {
                 return response()->json(['success' => true, 'data' => ['product_categories' => $productCategories]], 200);

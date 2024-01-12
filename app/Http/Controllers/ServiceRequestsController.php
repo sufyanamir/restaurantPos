@@ -65,6 +65,7 @@ class ServiceRequestsController extends Controller
                 'company_name' => $requestedCompany->req_company_name,
                 'company_address' => $requestedCompany->req_address,
                 'company_phone' => $requestedCompany->req_number,
+                'company_email' => $requestedCompany->req_email,
             ]);
 
             $password = rand(); // Set the default password
