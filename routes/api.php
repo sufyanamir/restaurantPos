@@ -24,14 +24,14 @@ Route::middleware('auth:sanctum')->group(function () {
     // table apis
     Route::post('/addTable', [ApiController::class, 'addTable']);
     Route::post('/updateTable', [ApiController::class, 'updateKitchen']);
-    Route::post('/deleteTable/{id}', [ApiController::class, 'deleteKitchen']);
+    Route::get('/deleteTable/{id}', [ApiController::class, 'deleteKitchen']);
     Route::get('/getTables', [ApiController::class, 'getTables']);
     // table apis
 
     // kitchen apis
     Route::post('/addKitchen', [ApiController::class, 'addKitchen']);
     Route::post('/updateKitchen', [ApiController::class, 'updateKitchen']);
-    Route::post('/deleteKitchen/{id}', [ApiController::class, 'deleteKitchen']);
+    Route::get('/deleteKitchen/{id}', [ApiController::class, 'deleteKitchen']);
     Route::get('/getKitchen', [ApiController::class, 'getKitchen']);
     // kitchen apis
 
