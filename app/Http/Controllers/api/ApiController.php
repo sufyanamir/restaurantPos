@@ -152,7 +152,7 @@ class ApiController extends Controller
 
             $kitchen->save();
 
-            return response()->json(['success' => true, 'message' => 'Kitchen updated!', 'data' => $kitchen->kitchen_id], 200);
+            return response()->json(['success' => true, 'message' => 'Kitchen updated!', 'data' => $kitchen], 200);
 
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
@@ -174,7 +174,7 @@ class ApiController extends Controller
 
             $kitchen->delete();
 
-            return response()->json(['success' => true, 'message' => 'Kitchen deleted!', 'deleted_id' => $kitchen], 200);
+            return response()->json(['success' => true, 'message' => 'Kitchen deleted!', 'deleted_id' => $kitchen->kitchen_id], 200);
             
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
