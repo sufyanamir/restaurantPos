@@ -513,6 +513,7 @@ class ApiController extends Controller
                         'product_code' => $product->product_code,
                         'title' => $product->product_name,
                         'product_image' => $product->product_image,
+                        'favourite_item' => $product->favourite_item,
                         'app_url' => $product->app_url,
                         'price' => $product->product_price,
                         'created_at' => $product->created_at,
@@ -619,6 +620,7 @@ class ApiController extends Controller
                     'product_code' => $addedProduct->product_code,
                     'title' => $addedProduct->product_name,  // Rename product_name to title
                     'product_image' => $addedProduct->product_image,
+                    'favourite_item' => $addedProduct->favourite_item,
                     'app_url' => $addedProduct->app_url,
                     'price' => $addedProduct->product_price,
                     'created_at' => $addedProduct->created_at,
@@ -663,7 +665,7 @@ class ApiController extends Controller
             $validatedData = $request->validate([
                 'category_id' => 'required',
                 'category_name' => 'nullable|string',
-                'printer_ip' => 'nullable|string',
+                // 'printer_ip' => 'nullable|string',
                 'branch_id' => 'nullable|string',
                 'kitchen_id' => 'nullable|numeric',
                 'upload_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
@@ -672,7 +674,7 @@ class ApiController extends Controller
             $category = ProductCategory::where('category_id', $validatedData['category_id'])->first();
 
             $category->category_name = $validatedData['category_name'];
-            $category->printer_ip = $validatedData['printer_ip'];
+            // $category->printer_ip = $validatedData['printer_ip'];
             $category->branch_id = $validatedData['branch_id'];
             $category->kitchen_id = $validatedData['kitchen_id'];
 
@@ -727,7 +729,7 @@ class ApiController extends Controller
         try {
             $validatedData = $request->validate([
                 'category_name' => 'required|string',
-                'printer_ip' => 'required|string',
+                // 'printer_ip' => 'required|string',
                 'branch_id' => 'required|string',
                 'kitchen_id' => 'required|numeric',
                 'upload_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
@@ -740,7 +742,7 @@ class ApiController extends Controller
                     'category_name' => $validatedData['category_name'],
                 ],
                 [
-                    'printer_ip' => $validatedData['printer_ip'],
+                    // 'printer_ip' => $validatedData['printer_ip'],
                     'branch_id' => $validatedData['branch_id'],
                     'kitchen_id' => $validatedData['kitchen_id'],
                     'app_url' => $this->appUrl,

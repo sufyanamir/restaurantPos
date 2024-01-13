@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id('category_id');
             $table->integer('company_id');
             $table->text('category_name');
-            $table->text('printer_ip');
+            $table->text('printer_ip')->nullable();
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->nullable()->useCurrent();
         });
