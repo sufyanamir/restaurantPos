@@ -21,6 +21,19 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 
 Route::middleware('auth:sanctum')->group(function () {
+    // table apis
+    Route::post('/addTable', [ApiController::class, 'addTable']);
+    Route::post('/updateTable', [ApiController::class, 'updateKitchen']);
+    Route::post('/deleteTable/{id}', [ApiController::class, 'deleteKitchen']);
+    Route::post('/getTables', [ApiController::class, 'getTables']);
+    // table apis
+
+    // kitchen apis
+    Route::post('/addKitchen', [ApiController::class, 'addKitchen']);
+    Route::post('/updateKitchen', [ApiController::class, 'updateKitchen']);
+    Route::post('/deleteKitchen/{id}', [ApiController::class, 'deleteKitchen']);
+    Route::post('/getKitchen', [ApiController::class, 'getKitchen']);
+    // kitchen apis
 
     //company apis
     Route::get('/getCompanyDetails', [ApiController::class, 'getCompanyDetails']);
@@ -35,8 +48,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // branch apis
     // category apis
     Route::post('/addProductCategory', [ApiController::class, 'addProductCategory']);
-    Route::post('/productCategory/update/{id}', [ApiController::class, 'updateProductCategory']);
+    Route::post('/productCategory/update', [ApiController::class, 'updateProductCategory']);
     Route::get('/getProductCategory', [ApiController::class, 'getProductCategory']);
+    Route::get('/deleteCategory/{id}', [ApiController::class, 'deleteCategory']);
     // category apis
 
     //product apis
