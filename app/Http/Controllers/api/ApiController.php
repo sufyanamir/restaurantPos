@@ -169,12 +169,12 @@ class ApiController extends Controller
             $kitchen = Kitchen::where('kitchen_id', $id)->first();
 
             if (!$kitchen) {
-                return response()->json(['success' => false, 'message' => 'No kitchen found!', 'deleted_id' => $kitchen], 404);
+                return response()->json(['success' => false, 'message' => 'No kitchen found!'], 404);
             }
 
             $kitchen->delete();
 
-            return response()->json(['success' => true, 'message' => 'Kitchen deleted!'], 200);
+            return response()->json(['success' => true, 'message' => 'Kitchen deleted!', 'deleted_id' => $kitchen], 200);
             
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
