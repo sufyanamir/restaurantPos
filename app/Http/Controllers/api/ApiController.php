@@ -43,9 +43,9 @@ class ApiController extends Controller
     {
         $table = RestaurantTables::where('restaurant_table_id', $id)->get();
 
-        $table->save();
+        $table->delete();
 
-        return response()->json(['success' => true, 'message' => 'Table deleted'], 200);
+        return response()->json(['success' => true, 'message' => 'Table deleted', 'deleted_id' => $table], 200);
     }
     // delete table
     
@@ -169,7 +169,7 @@ class ApiController extends Controller
             $kitchen = Kitchen::where('kitchen_id', $id)->first();
 
             if (!$kitchen) {
-                return response()->json(['success' => false, 'message' => 'No kitchen found!'], 404);
+                return response()->json(['success' => false, 'message' => 'No kitchen found!', 'deleted_id' => $kitchen], 404);
             }
 
             $kitchen->delete();
