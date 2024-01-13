@@ -5,23 +5,22 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ProductCategory extends Model
+class RestaurantTables extends Model
 {
     use HasFactory;
 
-    protected $table = 'product_category';
+    protected $table = 'restaurant_tables';
 
-    protected $primaryKey = 'category_id';
+    protected $primaryKey = 'restaurant_table_id';
 
     protected $fillable = [
         'company_id',
-        'category_name',
-        'printer_ip',
         'branch_id',
-        'category_image',
-        'app_url',
-        'kitchen_id',
+        'table_no',
+        'table_capacity',
+        'table_location',
     ];
-    
+
     public $timestamps = true;
+
 }

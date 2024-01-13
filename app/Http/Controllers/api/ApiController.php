@@ -25,8 +25,10 @@ use App\Models\Company;
 use App\Models\CompanyBranch;
 use App\Models\CompanyExpense;
 use App\Models\imageGallery;
+use App\Models\Kitchen;
 use App\Models\ProductCategory;
 use App\Models\Products;
+use App\Models\RestaurantTables;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rules\Unique;
@@ -34,9 +36,193 @@ use Illuminate\Validation\Rules\Unique;
 class ApiController extends Controller
 {
     protected $appUrl = 'https://adminpos.thewebconcept.tech/';
-    //----------------------------------------------------Announcements APIs------------------------------------------------------//
+    //----------------------------------------------------kitchen screen APIs------------------------------------------------------//
+    
+    // delete table
+    public function deleteTable($id)
+    {
+        $table = RestaurantTables::where('restaurant_table_id', $id)->get();
 
-    //----------------------------------------------------Announcements APIs------------------------------------------------------//
+        $table->save();
+
+        return response()->json(['success' => true, 'message' => 'Table deleted'], 200);
+    }
+    // delete table
+    
+    // get table
+    public function updateTable(Request $request)
+    {
+        try {
+            $user = Auth::user();
+
+            $validatedData = $request->validate([
+                'restaurant_table_id' => 'required',
+                'table_no' => 'nullable|numeric',
+                'table_location' => 'nullable|string',
+                'table_capacity' => 'nullable|numeric',
+                'branch_id' => 'nullable|numeric',
+            ]);
+
+            $table = RestaurantTables::where('restaurant_table_id', $validatedData['restaurant_table_id']);
+
+            $table->table_no = $validatedData['table_no'];
+            $table->table_location = $validatedData['table_location'];
+            $table->table_capacity = $validatedData['table_capacity'];
+            $table->branch_id = $validatedData['branch_id'];
+
+            $table->save();
+
+            return response()->json(['success' => true, 'message' => 'Table Updated!', 'data' => $table], 200);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+    // get table
+    
+    // get table
+    public function getTables()
+    {
+        $user = Auth::user();
+
+        if ($user->user_role == 'admin') {
+            $tables = RestaurantTables::where('company_id', $user->company_id)->get();
+        }else {
+            $tables = RestaurantTables::where(['compnay_id', $user->company_id, 'branch_id' => $user->user_branch])->get();
+        }
+
+        return response()->json(['success' => true, 'data' => $tables], 200);
+
+    }
+    // get table
+
+    // add table
+    public function addTable(Request $request)
+    {
+        try {
+            $user = Auth::user();
+
+            $validatedData = $request->validate([
+                'table_no' => 'required|numeric',
+                'table_location' => 'required|string',
+                'table_capacity' => 'required|numeric',
+                'branch_id' => 'required|numeric',
+            ]);
+
+            $table = RestaurantTables::create([
+                'company_id' => $user->company_id,
+                'branch_id' => $validatedData['branch_id'],
+                'table_no' => $validatedData['table_no'],
+                'table_capacity' => $validatedData['table_capacity'],
+                'table_location' => $validatedData['table_location'],
+            ]);
+
+            return response()->json(['success' => true, 'message' => 'Table added!' ,'data' => $table], 200);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+    // add table
+    //----------------------------------------------------kitchen screen APIs------------------------------------------------------//
+    
+    //----------------------------------------------------kitchen screen APIs------------------------------------------------------//
+    // get kicthen
+    public function updateKitchen(Request $request)
+    {
+        try {
+            $user = Auth::user();
+
+            $validatedData = $request->validate([
+                'kitchen_id' => 'required',
+                'kitchen_name' => 'required|string',
+                'printer_ip' => 'required|string',
+                'branch_id' => 'required|numeric',
+            ]);
+
+            $kitchen = Kitchen::where('kitchen_id', $validatedData['kitchen_id'])->first();
+
+            if (!$kitchen) {
+                return response()->json(['success' => false, 'message' => 'No kitchen found!'], 404);
+            }
+
+            $kitchen->kitchen_name = $validatedData['kitchen_name'];
+            $kitchen->printer_ip = $validatedData['printer_ip'];
+            $kitchen->branch_id = $validatedData['branch_id'];
+
+            $kitchen->save();
+
+            return response()->json(['success' => true, 'message' => 'Kitchen updated!', 'data' => $kitchen], 200);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+    // get kicthen
+    
+    // get kicthen
+    public function deleteKitchen($id)
+    {
+        try {
+            $user = Auth::user();
+
+            $kitchen = Kitchen::where('kitchen_id', $id)->first();
+
+            if (!$kitchen) {
+                return response()->json(['success' => false, 'message' => 'No kitchen found!'], 404);
+            }
+
+            $kitchen->delete();
+
+            return response()->json(['success' => true, 'message' => 'Kitchen deleted!'], 200);
+            
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+    // get kicthen
+    
+    // get kicthen
+    public function getKitchen()
+    {
+        $user = Auth::user();
+        if ($user->user_role == 'admin') {
+            $kitchen = Kitchen::where(['company_id' => $user->company_id])->get();
+        }else{
+            $kitchen = Kitchen::where(['company_id' => $user->company_id, 'branch_id' => $user->user_branch])->get();
+        }
+
+        return response()->json(['success' => true, 'data' => $kitchen], 200);
+
+    }
+    // get kicthen
+
+    // add kicthen
+    public function addKitchen(Request $request)
+    {
+        $user = Auth::user();
+        try {
+            $validatedData = $request->validate([
+                'kitchen_name' => 'required|string',
+                'printer_ip' => 'required|string',
+                'branch_id' => 'required|numeric',
+            ]);
+
+            $kitchen = Kitchen::create([
+                'company_id' => $user->company_id,
+                'kitchen_name' => $validatedData['kitchen_name'],
+                'printer_ip' => $validatedData['printer_ip'],
+                'branch_id' => $validatedData['branch_id'],
+            ]);
+
+            return response()->json(['success' => true, 'message' => 'kitchen added!', 'data' => $kitchen], 200);
+            
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+    // add kicthen
+    //----------------------------------------------------kitchen screen APIs------------------------------------------------------//
 
     //----------------------------------------------------Branch APIs------------------------------------------------------//
     // update branch
@@ -184,6 +370,7 @@ class ApiController extends Controller
                 'product_addOn' => 'nullable|array',
                 'product_addOn.*.addOn_name' => 'nullable|string',
                 'product_addOn.*.addOn_price' => 'nullable|numeric',
+                'favourite_item' => 'nullable|numeric',
             ]);
 
             // Find the existing product by ID
@@ -201,6 +388,7 @@ class ApiController extends Controller
                 'product_price' => $validatedData['product_price'],
                 'category_id' => $validatedData['category_id'],
                 'app_url' => $this->appUrl,
+                'favourite_item' => $validatedData['favourite_item'],
             ]);
 
             // Handle product image update
@@ -249,6 +437,7 @@ class ApiController extends Controller
                     'title' => $updatedProduct->product_name,
                     'product_image' => $updatedProduct->product_image,
                     'app_url' => $updatedProduct->app_url,
+                    'favourite_item' => $updatedProduct->favourite_item,
                     'price' => $updatedProduct->product_price,
                     'created_at' => $updatedProduct->created_at,
                     'updated_at' => $updatedProduct->updated_at,
@@ -456,7 +645,45 @@ class ApiController extends Controller
     //----------------------------------------------------product category APIs------------------------------------------------------//
 
     //updte product category
+    public function deleteCategory($id)
+    {
+        $category = ProductCategory::where('category_id', $id)->first();
 
+        $category->delete();
+
+        return response()->json(['success' => true, 'message' => 'category deleted!'], 200);
+    }
+    //updte product category
+    
+    //updte product category
+    public function updateProductCategory(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            $validatedData = $request->validate([
+                'category_id' => 'required',
+                'category_name' => 'nullable|string',
+                'printer_ip' => 'nullable|string',
+                'branch_id' => 'nullable|string',
+                'kitchen_id' => 'nullable|numeric',
+                'upload_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
+            ]);
+
+            $category = ProductCategory::where('category_id', $validatedData['category_id'])->first();
+
+            $category->category_name = $validatedData['category_name'];
+            $category->printer_ip = $validatedData['printer_ip'];
+            $category->branch_id = $validatedData['branch_id'];
+            $category->kitchen_id = $validatedData['kitchen_id'];
+
+            $category->save();
+
+            return response()->json(['success' => true, 'message' => 'Category Updated successfully!', 'data' => $category], 200);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
     //updte product category
 
     //get product category
@@ -502,6 +729,7 @@ class ApiController extends Controller
                 'category_name' => 'required|string',
                 'printer_ip' => 'required|string',
                 'branch_id' => 'required|string',
+                'kitchen_id' => 'required|numeric',
                 'upload_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
             ]);
 
@@ -514,6 +742,7 @@ class ApiController extends Controller
                 [
                     'printer_ip' => $validatedData['printer_ip'],
                     'branch_id' => $validatedData['branch_id'],
+                    'kitchen_id' => $validatedData['kitchen_id'],
                     'app_url' => $this->appUrl,
                 ]
             );
