@@ -23,8 +23,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::middleware('auth:sanctum')->group(function () {
     // table apis
     Route::post('/addTable', [ApiController::class, 'addTable']);
-    Route::post('/updateTable', [ApiController::class, 'updateKitchen']);
-    Route::get('/deleteTable/{id}', [ApiController::class, 'deleteKitchen']);
+    Route::post('/updateTable', [ApiController::class, 'updateTable']);
+    Route::get('/deleteTable/{id}', [ApiController::class, 'deleteTable']);
     Route::get('/getTables', [ApiController::class, 'getTables']);
     // table apis
 
