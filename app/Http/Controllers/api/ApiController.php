@@ -41,7 +41,7 @@ class ApiController extends Controller
     // delete table
     public function deleteTable($id)
     {
-        $table = RestaurantTables::where('restaurant_table_id', $id)->get();
+        $table = RestaurantTables::where('restaurant_table_id', $id)->first();
 
         $table->delete();
 
