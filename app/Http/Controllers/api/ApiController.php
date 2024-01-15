@@ -37,7 +37,7 @@ class ApiController extends Controller
 {
     protected $appUrl = 'https://adminpos.thewebconcept.tech/';
     //----------------------------------------------------kitchen screen APIs------------------------------------------------------//
-    
+
     // delete table
     public function deleteTable($id)
     {
@@ -48,7 +48,7 @@ class ApiController extends Controller
         return response()->json(['success' => true, 'message' => 'Table deleted', 'deleted_id' => $table->restaurant_table_id], 200);
     }
     // delete table
-    
+
     // get table
     public function updateTable(Request $request)
     {
@@ -56,14 +56,14 @@ class ApiController extends Controller
             $user = Auth::user();
 
             $validatedData = $request->validate([
-                'restaurant_table_id' => 'required',
+                'id' => 'required',
                 'table_no' => 'nullable|numeric',
                 'table_location' => 'nullable|string',
                 'table_capacity' => 'nullable|numeric',
                 'branch_id' => 'nullable|numeric',
             ]);
 
-            $table = RestaurantTables::where('restaurant_table_id', $validatedData['restaurant_table_id']);
+            $table = RestaurantTables::where('restaurant_table_id', $validatedData['id']);
 
             $table->table_no = $validatedData['table_no'];
             $table->table_location = $validatedData['table_location'];
@@ -73,13 +73,12 @@ class ApiController extends Controller
             $table->save();
 
             return response()->json(['success' => true, 'message' => 'Table Updated!', 'data' => $table], 200);
-
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
     }
     // get table
-    
+
     // get table
     public function getTables()
     {
@@ -87,12 +86,18 @@ class ApiController extends Controller
 
         if ($user->user_role == 'admin') {
             $tables = RestaurantTables::where('company_id', $user->company_id)->get();
-        }else {
+        } else {
             $tables = RestaurantTables::where(['compnay_id', $user->company_id, 'branch_id' => $user->user_branch])->get();
         }
 
-        return response()->json(['success' => true, 'data' => $tables], 200);
+        // Use map to rename the column
+        $tables = $tables->map(function ($table) {
+            $table->id = $table->restaurant_table_id;
+            unset($table->restaurant_table_id); // Remove the old column
+            return $table;
+        });
 
+        return response()->json(['success' => true, 'data' => $tables], 200);
     }
     // get table
 
@@ -117,15 +122,14 @@ class ApiController extends Controller
                 'table_location' => $validatedData['table_location'],
             ]);
 
-            return response()->json(['success' => true, 'message' => 'Table added!' ,'data' => $table], 200);
-
+            return response()->json(['success' => true, 'message' => 'Table added!', 'data' => $table], 200);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
     }
     // add table
     //----------------------------------------------------kitchen screen APIs------------------------------------------------------//
-    
+
     //----------------------------------------------------kitchen screen APIs------------------------------------------------------//
     // get kicthen
     public function updateKitchen(Request $request)
@@ -153,13 +157,12 @@ class ApiController extends Controller
             $kitchen->save();
 
             return response()->json(['success' => true, 'message' => 'Kitchen updated!', 'data' => $kitchen], 200);
-
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
     }
     // get kicthen
-    
+
     // get kicthen
     public function deleteKitchen($id)
     {
@@ -175,25 +178,23 @@ class ApiController extends Controller
             $kitchen->delete();
 
             return response()->json(['success' => true, 'message' => 'Kitchen deleted!', 'deleted_id' => $kitchen->kitchen_id], 200);
-            
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
     }
     // get kicthen
-    
+
     // get kicthen
     public function getKitchen()
     {
         $user = Auth::user();
         if ($user->user_role == 'admin') {
             $kitchen = Kitchen::where(['company_id' => $user->company_id])->get();
-        }else{
+        } else {
             $kitchen = Kitchen::where(['company_id' => $user->company_id, 'branch_id' => $user->user_branch])->get();
         }
 
         return response()->json(['success' => true, 'data' => $kitchen], 200);
-
     }
     // get kicthen
 
@@ -216,7 +217,6 @@ class ApiController extends Controller
             ]);
 
             return response()->json(['success' => true, 'message' => 'kitchen added!', 'data' => $kitchen], 200);
-            
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
@@ -656,7 +656,7 @@ class ApiController extends Controller
         return response()->json(['success' => true, 'message' => 'category deleted!'], 200);
     }
     //updte product category
-    
+
     //updte product category
     public function updateProductCategory(Request $request)
     {
@@ -681,7 +681,6 @@ class ApiController extends Controller
             $category->save();
 
             return response()->json(['success' => true, 'message' => 'Category Updated successfully!', 'data' => $category], 200);
-
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
@@ -704,11 +703,9 @@ class ApiController extends Controller
 
             $productCategories = ProductCategory::where(function ($query) use ($user) {
                 $query->where('company_id', $user->company_id);
-            
-                
             })->orderBy('category_name', 'asc')->get();
 
-            
+
 
             if ($productCategories->count() > 0) {
                 return response()->json(['success' => true, 'data' => ['product_categories' => $productCategories]], 200);
