@@ -72,6 +72,9 @@ class ApiController extends Controller
 
             $table->save();
 
+            $table->id = $table->restaurant_table_id;
+            unset($table->restaurant_table_id);
+
             return response()->json(['success' => true, 'message' => 'Table Updated!', 'data' => $table], 200);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
@@ -121,6 +124,9 @@ class ApiController extends Controller
                 'table_capacity' => $validatedData['table_capacity'],
                 'table_location' => $validatedData['table_location'],
             ]);
+
+            $table->id = $table->restaurant_table_id;
+            unset($table->restaurant_table_id);
 
             return response()->json(['success' => true, 'message' => 'Table added!', 'data' => $table], 200);
         } catch (\Exception $e) {
