@@ -19,6 +19,7 @@ class RestaurantTables extends Model
         'table_no',
         'table_capacity',
         'table_location',
+        'status',
     ];
 
     public $timestamps = true;

@@ -61,6 +61,7 @@ class ApiController extends Controller
                 'table_location' => 'nullable|string',
                 'table_capacity' => 'nullable|numeric',
                 'branch_id' => 'nullable|numeric',
+                'status' => 'nullable|string',
             ]);
 
             $table = RestaurantTables::where('restaurant_table_id', $validatedData['id'])->first();
@@ -69,6 +70,7 @@ class ApiController extends Controller
             $table->table_location = $validatedData['table_location'];
             $table->table_capacity = $validatedData['table_capacity'];
             $table->branch_id = $validatedData['branch_id'];
+            $table->status = $validatedData['status'];
 
             $table->save();
 
@@ -123,6 +125,7 @@ class ApiController extends Controller
                 'table_no' => $validatedData['table_no'],
                 'table_capacity' => $validatedData['table_capacity'],
                 'table_location' => $validatedData['table_location'],
+                'status' => 'available',
             ]);
 
             $table->id = $table->restaurant_table_id;
