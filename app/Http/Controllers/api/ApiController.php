@@ -57,7 +57,7 @@ class ApiController extends Controller
 
             $validatedData = $request->validate([
                 'id' => 'required',
-                'table_no' => 'nullable|numeric',
+                'table_no' => 'nullable|string',
                 'table_location' => 'nullable|string',
                 'table_capacity' => 'nullable|numeric',
                 'branch_id' => 'nullable|numeric',
@@ -113,7 +113,7 @@ class ApiController extends Controller
             $user = Auth::user();
 
             $validatedData = $request->validate([
-                'table_no' => 'required|numeric',
+                'table_no' => 'required|string',
                 'table_location' => 'required|string',
                 'table_capacity' => 'required|numeric',
                 'branch_id' => 'required|numeric',
@@ -434,6 +434,7 @@ class ApiController extends Controller
 
             // Fetch the updated product with details
             $updatedProduct = Products::with('variations', 'add_ons', 'category')->find($existingProduct->product_id);
+            $kitchen = Kitchen::where('kitchen_id', $updatedProduct->category->kitchen_id)->first();
 
             return response()->json(['success' => true, 'message' => 'Product updated successfully!', 'data' => [
                 'updated_product' => [
@@ -442,6 +443,8 @@ class ApiController extends Controller
                     'branch_id' => $updatedProduct->branch_id,
                     'category_id' => $updatedProduct->category_id,
                     'category' => $updatedProduct->category->category_name,
+                    'kitchen_id' => $kitchen->kitchen_id,
+                    'kitchen_name' => $kitchen->kitchen_name,
                     'product_code' => $updatedProduct->product_code,
                     'title' => $updatedProduct->product_name,
                     'product_image' => $updatedProduct->product_image,
@@ -513,12 +516,17 @@ class ApiController extends Controller
                 $formattedProducts = $products->map(function ($product) {
                     $category = ProductCategory::find($product->category_id);
 
+                    // Fetch kitchen information based on kitchen_id
+                    $kitchen = Kitchen::where('kitchen_id', $category->kitchen_id)->first();
+
                     return [
                         'product_id' => $product->product_id,
                         'company_id' => $product->company_id,
                         'branch_id' => $product->branch_id,
                         'category_id' => $product->category_id,
                         'category' => $category ? $category->category_name : null,
+                        'kitchen_id' => $kitchen->kitchen_id,
+                        'kitchen_name' => $kitchen->kitchen_name,
                         'product_code' => $product->product_code,
                         'title' => $product->product_name,
                         'product_image' => $product->product_image,
@@ -618,6 +626,8 @@ class ApiController extends Controller
                 }
             }
             $addedProduct = Products::with('variations', 'add_ons', 'category')->find($product->product_id);
+            
+            $kitchen = Kitchen::where('kitchen_id', $addedProduct->category->kitchen_id)->first();
 
             return response()->json(['success' => true, 'message' => 'product added successfully!', 'data' => [
                 'added_product' => [
@@ -626,6 +636,8 @@ class ApiController extends Controller
                     'branch_id'  => $addedProduct->branch_id,
                     'category_id' => $addedProduct->category_id,
                     'category' => $addedProduct->category->category_name,
+                    'kitchen_id' => $kitchen->kitchen_id,
+                    'kitchen_name' => $kitchen->kitchen_name,
                     'product_code' => $addedProduct->product_code,
                     'title' => $addedProduct->product_name,  // Rename product_name to title
                     'product_image' => $addedProduct->product_image,

@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id('restaurant_table_id');
             $table->integer('company_id');
             $table->integer('branch_id');
-            $table->integer('table_no');
+            $table->text('table_no');
             $table->integer('table_capacity');
             $table->text('table_location');
             $table->timestamp('created_at')->useCurrent();
