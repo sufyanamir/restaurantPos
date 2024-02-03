@@ -3,6 +3,8 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\api\ApiController;
+use App\Http\Controllers\OrderController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -74,7 +76,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //image gallery
 
     //Order
-    Route::post('/createOrder', [ApiController::class, 'createOrder']);
+   // Route::post('/createOrder', [OrderController::class, 'createOrder']);
     Route::get('/getOrders', [ApiController::class, 'getOrders']);
     Route::get('/getOrder', [ApiController::class, 'getOrderDetails']);
     Route::post('/updateOrderStatus', [ApiController::class, 'updateOrderStatus']);
@@ -123,3 +125,7 @@ Route::post('/forgotPassword', [ApiController::class, 'forgotPassword']);
 Route::post('/validateOtp', [ApiController::class, 'validateOtp']);
 Route::post('/resetPassword', [ApiController::class, 'resetPassword']);
 //authenticationl
+
+//delete
+
+Route::post('/createOrder', [OrderController::class, 'createOrder']);
