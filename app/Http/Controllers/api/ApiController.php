@@ -26,6 +26,7 @@ use App\Models\CompanyBranch;
 use App\Models\CompanyExpense;
 use App\Models\imageGallery;
 use App\Models\Kitchen;
+use App\Models\OrderAdditionalItems;
 use App\Models\ProductCategory;
 use App\Models\Products;
 use App\Models\RestaurantTables;
@@ -36,6 +37,108 @@ use Illuminate\Validation\Rules\Unique;
 class ApiController extends Controller
 {
     protected $appUrl = 'https://adminpos.thewebconcept.tech/';
+    
+    //----------------------------------------------------kitchen screen APIs------------------------------------------------------//
+    // create order
+    public function createOrder(Request $request)
+    {
+        try {
+
+            $user = Auth::user();
+
+            $validatedData = $request->validate([
+                'userId' => 'required|numeric',
+                'id' => 'required|numeric',
+                'createdAt' => 'required|numeric',
+                'type' => 'required|string',
+                'split' => 'nullable|numeric',
+                'splittedAmount' => 'nullable|numeric',
+                'subTotal' => 'required|numeric',
+                'discount' => 'required|numeric',
+                'saleTax' => 'nullable|numeric',
+                'serviceCharges' => 'nullable|numeric',
+                'change' => 'required|numeric',
+                'finalTotal' => 'required|numeric',
+                'grandTotal' => 'required|numeric',
+                'cartItems' => 'required|array',
+                'cartItems.*.product_id' => 'required',
+                'cartItems.*.qty' => 'required|numeric',
+                'cartItems.*.price' => 'required|numeric',
+                'cartItems.*.product_variations' => 'nullable',
+                'cartItems.*.title' => 'nullable',
+                'cartItems.*.add_on' => 'nullable',
+                'cartItems.*.additional_item' => 'required',
+                'info.customerName' => 'nullable|string',
+                'info.phone' => 'nullable|numeric',
+                'info.assignRider' => 'nullable|numeric',
+                'info.address' => 'nullable|string',
+                'info.table_id' => 'nullable|numeric',
+                'info.waiter' => 'nullable|numeric',
+                'info.waiterName' => 'nullable|string',
+                'info.table_location' => 'nullable|string',
+                'info.table_no' => 'nullable|numeric',
+                'info.table_capacity' => 'nullable|numeric',
+                'info.branch_id' => 'nullable|numeric',
+            ]);            
+
+            $order = Orders::create([
+                'added_user_id' => $validatedData['userId'],
+                'order_id' => $validatedData['id'],
+                'order_no' => $validatedData['createdAt'],
+                'order_type' => $validatedData['type'],
+                'order_sub_total' => $validatedData['subTotal'],
+                'order_discount' => $validatedData['discount'],
+                'order_grand_total' => $validatedData['grandTotal'],
+                'order_final_total' => $validatedData['finalTotal'],
+                'order_sale_tax' => $validatedData['saleTax'],
+                'service_charges' => $validatedData['serviceCharges'],
+                'order_change' => $validatedData['change'],
+                'order_split' => $validatedData['split'],
+                'order_split_amount' => $validatedData['splittedAmount'],
+                'is_uploaded' => 1,
+                'customer_name' => $validatedData['info']['customerName'],
+                'phone' => $validatedData['info']['phone'],
+                'assign_rider' => $validatedData['info']['assignRider'],
+                'customer_address' => $validatedData['info']['address'],
+                'table_id' => $validatedData['info']['table_id'],
+                'table_location' => $validatedData['info']['table_location'],
+                'table_no' => $validatedData['info']['table_no'],
+                'table_capacity' => $validatedData['info']['table_capacity'],
+                'branch_id' => $validatedData['info']['branch_id'],
+                'waiter_id' => $validatedData['info']['waiter'],
+                'waiter_name' => $validatedData['info']['waiterName'],
+            ]);
+
+            foreach ($validatedData['cartItems'] as $cartItem) {
+                if ($cartItem['additional_item'] == 1) {
+                    OrderAdditionalItems::create([
+                        'order_main_id' => $order->order_main_id,
+                        'product_id' => $cartItem['product_id'],
+                        'title' => $cartItem['title'],
+                        'price' => $cartItem['price'],
+                        'product_qty' => $cartItem['qty'],
+                    ]);
+                } else {
+                    OrderItems::create([
+                        'order_main_id' => $order->order_main_id,
+                        'product_id' => $cartItem['product_id'],
+                        'product_qty' => $cartItem['qty'],
+                        'product_price' => $cartItem['price'],
+                        'product_variations' => json_encode($cartItem['product_variations']),
+                        'product_add_ons' => json_encode($cartItem['add_on']),
+                    ]);
+                }
+            }            
+
+            return response()->json(['success' => true, 'message' => 'Order Created!', 'createdAt' => $order->order_no, 'isUploaded' => $order->is_uploaded], 200);
+            
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+    // create order
+    //----------------------------------------------------kitchen screen APIs------------------------------------------------------//
+    
     //----------------------------------------------------kitchen screen APIs------------------------------------------------------//
 
     // delete table
@@ -996,247 +1099,7 @@ class ApiController extends Controller
     //post image
     //----------------------------------------------------Image APIs------------------------------------------------------//
 
-    //----------------------------------------------------Order APIs------------------------------------------------------//
-    //update orders
-    public function updateOrderStatus(Request $request)
-    {
-        $user = Auth::user();
-
-        try {
-            $validatedData = $request->validate([
-                'order_id' => 'required|numeric',
-            ]);
-
-            // Find the order by ID
-            $order = Orders::find($validatedData['order_id']);
-
-            if (!$order) {
-                return response()->json(['success' => false, 'message' => 'Order not found'], 404);
-            }
-
-            // Check if the order is currently in the 'pending' status (status 2)
-            if ($order->order_status === 2) {
-                // Update the order status to 'paid' (status 4)
-                $order->order_status = 4;
-                $order->save();
-
-                // Find the associated customer
-                $customer = Customers::find($order->customer_id);
-
-                if ($customer) {
-                    // Update the customer status to 'completed' (status 3)
-                    $customer->customer_status = 3;
-                    $customer->save();
-                }
-
-                return response()->json(['success' => true, 'message' => 'Order status updated to paid, and customer status updated to completed.'], 200);
-            } else {
-                return response()->json(['success' => false, 'message' => 'Order status cannot be updated. It may not be in the pending status.'], 400);
-            }
-        } catch (\Throwable $th) {
-            return response()->json(['success' => false, 'message' => $th->getMessage()], 400);
-        }
-    }
-
-    //update orders
-
-    public function getOrderDetails(Request $request)
-    {
-        try {
-            $order_id = $request->input('orderId');
-            $statusMapping = [
-                'new' => 0,
-                'active' => 1,
-                'pending' => 2,
-                'completed' => 3,
-                'paid' => 4,
-            ];
-            // Find the order by order_id and eager load its relationships including the customer
-            $order = Orders::with('customer')->find($order_id);
-
-            if (!$order) {
-                return response()->json(['success' => false, 'message' => 'Order not found'], 404);
-            }
-            $order->start_date = Carbon::parse($order->start_date)->format('d M Y');
-            $order->end_date = Carbon::parse($order->end_date)->format('d M Y');
-            // Get the order items for the order
-            $orderItems = OrderItems::where('order_id', $order->order_id)->get();
-
-            // Create a new array to hold the modified data
-            $modifiedOrderItems = [];
-
-            foreach ($orderItems as $orderItem) {
-                $service = Services::find($orderItem->service_id);
-                if ($service) {
-                    $serviceData = [
-                        'service_id' => $service->service_id,
-                        'service_name' => $service->service_name,
-                        'service_subtitle' => $service->service_subtitle,
-                        'service_charges' => $service->service_charges,
-                        'service_desc' => $service->service_desc,
-                        'service_image' => $service->service_image,
-                        'added_user_id' => $service->added_user_id,
-                        'company_id' => $service->company_id,
-                        'service_duration' => $service->service_duration,
-                        'order_item_qty' => $orderItem->order_item_qty,
-                    ];
-
-                    $modifiedOrderItems[] = $serviceData;
-                }
-            }
-
-            // Convert order_status and customer_status to strings based on the $statusMapping
-            $order->setAttribute('order_status', array_search($order->order_status, $statusMapping));
-            $order->customer->setAttribute('customer_status', array_search($order->customer->customer_status, $statusMapping));
-
-            // Assign the modified data to the order_items property
-            $order->setAttribute('order_items', $modifiedOrderItems);
-
-            return response()->json(['success' => true, 'data' => $order], 200);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
-        }
-    }
-
-
-    //get orders
-    public function getOrders(Request $request)
-    {
-        try {
-            $user = Auth::user();
-            $search = $request->input('search');
-
-            $query = Orders::select('orders.order_id', 'orders.order_total', 'orders.order_status', 'customers.customer_name', 'customers.customer_image', 'customers.customer_email')
-                ->join('customers', 'orders.customer_id', '=', 'customers.customer_id')
-                ->where('orders.company_id', $user->company_id);
-
-            if (!empty($search)) {
-                $query->where('customers.customer_name', 'like', '%' . $search . '%');
-            }
-            $orders = $query->orderBy('order_id', 'desc')->get();
-
-            $responseData = $orders;
-
-            if (!empty($responseData)) {
-                return response()->json(['success' => true, 'data' => ['orders' => $responseData]], 200);
-            } else {
-                return response()->json(['success' => false, 'message' => 'No record found'], 404);
-            }
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
-        }
-    }
-    //get orders
-
-    //create order
-    public function createOrder(Request $request)
-    {
-        try {
-            $statusMapping = [
-                'new' => 0,
-                'active' => 1,
-                'pending' => 2,
-                'completed' => 3,
-                'paid' => 4,
-            ];
-            $user = Auth::user();
-            // Validate the incoming JSON data
-            $validatedData = $request->validate([
-                'customer_id' => 'required|integer',
-                'services' => 'required|array',
-                'services.*.service_id' => 'required|integer',
-                'services.*.qty' => 'required|integer',
-                'start_Date' => 'required',
-                'end_Date' => 'required',
-                'additional_cost_list' => 'nullable|array',
-                'additional_cost_list.*.serviceName' => 'nullable|string',
-                'additional_cost_list.*.serviceCost' => 'nullable|numeric',
-                'discount' => 'required|numeric',
-                'remarks' => 'nullable|string',
-                'total' => 'required|numeric',
-                'invoice_status' => 'required|in:pending,paid',
-                'additional_cost_total' => 'required|numeric',
-                'upload_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
-                'total_duration' => 'required|numeric',
-                'sub_total' => 'required|numeric',
-            ]);
-
-            $status = $statusMapping[$validatedData['invoice_status']];
-
-            $customer = Customers::find($validatedData['customer_id']);
-
-            if (!$customer) {
-                return response()->json(['success' => false, 'message' => 'Customer not found'], 404);
-            }
-
-            // Upload and save the image if provided
-            $uploadedImage = $request->file('upload_image');
-            $imagePath = null; // Initialize the image path
-
-            if ($uploadedImage) {
-                $imageName = Str::random(20) . '.' . $uploadedImage->getClientOriginalExtension();
-
-                // Generate the full URL of the uploaded image
-                $imageUrl = url('storage/payment_receipts/' . $imageName);
-
-                // Store the image URL in the database
-                $imagePath = $imageUrl;
-            }
-
-            // Create an order record
-            $order = Orders::create([
-                'customer_id' => $validatedData['customer_id'],
-                'start_date' => date($validatedData['start_Date']),
-                'end_date' => date($validatedData['end_Date']),
-                'order_additional_items_total' => $validatedData['additional_cost_total'],
-                'order_discount' => $validatedData['discount'],
-                'order_remarks' => $validatedData['remarks'],
-                'order_total' => $validatedData['total'],
-                'order_status' => $status,
-                'company_id' => $user->company_id,
-                'total_duration' => $validatedData['total_duration'],
-                'sub_total' => $validatedData['sub_total'],
-                'app_url' => $this->appUrl,
-                'payment_receipt' => $imagePath,
-            ]);
-
-
-            // Create order items
-            foreach ($validatedData['services'] as $service) {
-                OrderItems::create([
-                    'order_id' => $order->order_id,
-                    'service_id' => $service['service_id'],
-                    'order_item_qty' => $service['qty'],
-                ]);
-            }
-
-            // Create additional items
-            foreach ($validatedData['additional_cost_list'] as $additionalItem) {
-                AdditionalItems::create([
-                    'order_id' => $order->order_id,
-                    'additional_item_name' => $additionalItem['serviceName'],
-                    'additional_item_cost' => $additionalItem['serviceCost'],
-                ]);
-            }
-
-            if ($customer) {
-                $customer->staff_id = null;
-                $customer->customer_assigned = 0;
-                if ($status == 4) {
-                    $customer->customer_status = 1;
-                } else {
-                    $customer->customer_status = 2;
-                }
-                $customer->save();
-            }
-
-            return response()->json(['success' => true, 'message' => 'Order created successfully!'], 200);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
-        }
-    }
-    //create order
-    //----------------------------------------------------Order APIs------------------------------------------------------//
+    
 
     //----------------------------------------------------Service APIs------------------------------------------------------//
     //get service detail
@@ -1819,334 +1682,6 @@ class ApiController extends Controller
 
     //----------------------------------------------------Staff APIs------------------------------------------------------//
 
-    //----------------------------------------------------Customer APIs------------------------------------------------------//
-    //assign customer
-    public function assignCustomer(Request $request)
-    {
-        $user = Auth::user();
-        try {
-            $validatedData = $request->validate([
-                'staff_id' => 'required|numeric',
-                'customer_id' => 'required|numeric',
-            ]);
-
-            $staffId = $validatedData['staff_id'];
-            $customerId = $validatedData['customer_id'];
-
-            $customer = Customers::where('customer_id', $customerId)->where('company_id', $user->company_id)->whereIn('customer_status', [1, 2])->first();
-            $staff = User::where('id', $staffId)->where('user_role', '2')->where('company_id', $user->company_id)->first();
-
-            if (!$staff) {
-                return response()->json(['success' => false, 'message' => 'staff not found!'], 404);
-            } elseif (!$customer) {
-                return response()->json(['success' => false, 'message' => 'customer not found!'], 404);
-            }
-
-            if ($customer->customer_assigned !== 0) {
-                return response()->json(['success' => false, 'message' => 'Customer is already assigned to a staff.'], 400);
-            }
-
-            $customer->staff_id = $staffId;
-            $customer->customer_assigned = true;
-            $customer->save();
-
-            return response()->json(['success' => true, 'message' => 'The customer has assigned to the staff'], 200);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
-        }
-    }
-    //assign customer
-
-    //get customer detail
-    public function getCustomerDetail(Request $request)
-    {
-        $user = Auth::user();
-        $customerId = $request->input('customerId');
-        $includeOrders = $request->input('includeOrders', false);
-
-        $statusMapping = [
-            'new' => 0,
-            'active' => 1,
-            'pending' => 2,
-            'completed' => 3,
-        ];
-
-        try {
-            $query = Customers::where('company_id', $user->company_id);
-
-            if (!empty($customerId)) {
-                $query->where('customer_id', $customerId);
-            }
-
-            $customer = $query->first();
-
-            if (!$customer) {
-                return response()->json(['success' => false, 'message' => 'Customer not found'], 404);
-            }
-
-            // Map numeric status back to status labels
-            $customer->customer_status = array_search($customer->customer_status, $statusMapping);
-
-            // Split social links into individual values
-            $socialLinks = explode(',', $customer->customer_social_links);
-            $customerData = [
-                'customer_id' => $customer->customer_id,
-                'company_id' => $customer->company_id,
-                'added_user_id' => $customer->added_user_id,
-                'customer_name' => $customer->customer_name,
-                'customer_email' => $customer->customer_email,
-                'customer_phone' => $customer->customer_phone,
-                'customer_address' => $customer->customer_address,
-                'fb_acc' => isset($socialLinks[0]) ? $socialLinks[0] : null,
-                'ig_acc' => isset($socialLinks[1]) ? $socialLinks[1] : null,
-                'tt_acc' => isset($socialLinks[2]) ? $socialLinks[2] : null,
-                'customer_image' => $customer->customer_image,
-                'customer_status' => $customer->customer_status,
-                'app_url' => $customer->app_url,
-                'created_at' => $customer->created_at,
-                'updated_at' => $customer->updated_at,
-                'staff_id' => $customer->staff_id,
-                'customer_assigned' => $customer->customer_assigned,
-            ];
-
-            $response = ['success' => true, 'data' => ['customer' => $customerData]];
-
-            if ($includeOrders) {
-                $orders = Orders::where('customer_id', $customer->customer_id)->orderBy('order_id', 'desc')->get();
-                $response['data']['orders'] = $orders;
-            }
-
-            return response()->json($response, 200);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
-        }
-    }
-    //get customer detail
-
-    //get customer
-    //get customer
-    public function getCustomer(Request $request)
-    {
-        $user = Auth::user();
-        $search = $request->input('search');
-        $statusFilter = $request->input('status');
-        $assignCustomers = $request->input('assignCustomers');
-
-        // Define a mapping of status labels to their numeric values
-        $statusMapping = [
-            'new' => 0,
-            'active' => 1,
-            'pending' => 2,
-            'completed' => 3,
-        ];
-
-        try {
-            $query = Customers::where('company_id', $user->company_id);
-
-            if (!empty($search)) {
-                $query->where('customer_name', 'like', '%' . $search . '%');
-            }
-
-            $query->orderBy('customer_id', 'desc');
-
-            // Map the user_role string to its numeric value (1 for admin, 2 for staff)
-            $userRoleMapping = [
-                'admin' => 1,
-                'staff' => 2,
-            ];
-
-            if ($user->user_role == 2) {
-                // If the user has 'staff' role (user_role 2), filter by staff_id
-                $query->where('staff_id', $user->id);
-            }
-
-            if ($assignCustomers === 'true') {
-                $query->whereIn('customer_status', [1, 2]);
-            } else {
-                if (!empty($statusFilter)) {
-                    if ($statusFilter === 'all') {
-                    } elseif (isset($statusMapping[$statusFilter])) {
-                        $numericStatus = $statusMapping[$statusFilter];
-                        $query->where('customer_status', $numericStatus);
-                    } else {
-                        return response()->json(['success' => false, 'message' => 'Invalid status filter.'], 400);
-                    }
-                }
-            }
-
-            $customers = $query->select('customer_id', 'customer_name', 'customer_email', 'customer_image', 'app_url', 'customer_status', 'customer_assigned')->get();
-
-            if ($customers->count() > 0) {
-                $customerData = $customers->map(function ($customer) use ($statusMapping) {
-                    $customer->customer_status = array_search($customer->customer_status, $statusMapping);
-                    return $customer;
-                });
-
-                return response()->json(['success' => true, 'data' => ['customers' => $customerData]], 200);
-            } else {
-                return response()->json(['success' => false, 'message' => 'No customers found!'], 404);
-            }
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
-        }
-    }
-
-    //get customer
-    //delete customer
-    public function deleteCustomer($id)
-    {
-        try {
-            $user = Customers::find($id);
-
-            if (!$user) {
-                return response()->json(['success' => false, 'message' => 'No customer found!'], 404);
-            }
-
-            $path = 'storage/customer_images/' . $user->customer_image;
-            if (File::exists($path)) {
-
-                File::delete($path);
-            }
-            $user->delete();
-
-            return response()->json(['success' => true, 'message' => 'Customer deleted successfully'], 200);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
-        }
-    }
-    //delete customer
-
-    //add customer
-    public function addCustomer(Request $request)
-    {
-        try {
-            $validatedData = $request->validate([
-                'name' => 'required|string|max:255',
-                'email' => 'required|email|max:255|unique:customers,customer_email',
-                'phone' => 'required|regex:/^[0-9]+$/|max:20',
-                'address' => 'required|string|max:400',
-                'upload_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
-                // 'company_id' => 'required',
-                // 'added_user_id' => 'required',
-                // Add more validation rules for other fields
-            ]);
-            $fbAcc = $request->input('fb_acc');
-            $igAcc = $request->input('ig_acc');
-            $ttAcc = $request->input('tt_acc');
-
-            $status = 0;
-
-            $socailLinks = "$fbAcc,$igAcc,$ttAcc";
-            $user = Auth::user();
-            $dataToInsert = [
-                'customer_name' => $validatedData['name'],
-                'customer_email' => $validatedData['email'],
-                'customer_phone' => $validatedData['phone'],
-                'customer_address' => $validatedData['address'],
-                'company_id' => $user->company_id,
-                'added_user_id' => $user->id,
-                'customer_social_links' => $socailLinks,
-                'customer_status' => $status,
-                'app_url' => $this->appUrl,
-                // Add other fields as needed
-            ];
-
-            if (!empty($validatedData['upload_image'])) {
-                $dataToInsert['customer_image'] = $validatedData['upload_image'];
-            }
-
-            DB::table('customers')->insert($dataToInsert);
-
-            if ($request->hasFile('upload_image')) {
-                // Get the uploaded file
-                $image = $request->file('upload_image');
-
-                // Generate a unique name for the image
-                $imageName = time() . '.' . $image->getClientOriginalExtension();
-
-                // Store the image in the specified storage location
-                $image->storeAs('public/customer_images', $imageName); // Adjust storage path as needed
-
-                // Now, if you want to associate the uploaded image filename with the inserted record, you would need to retrieve the last inserted ID.
-                $lastInsertedId = DB::getPdo()->lastInsertId();
-
-                // Update the 'upload_image' field for the inserted record
-                DB::table('customers')
-                    ->where('customer_id', $lastInsertedId)
-                    ->update(['customer_image' => 'storage/customer_images/' . $imageName]);
-            } else {
-                $lastInsertedId = DB::getPdo()->lastInsertId();
-
-                DB::table('customers')
-                    ->where('customer_id', $lastInsertedId)
-                    ->update(['customer_image' => 'assets/images/user.png']);
-            }
-
-            // Optionally, you can redirect back with a success message
-            return response()->json(['success' => true, 'message' => 'Customer added successfully!'], 200);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
-        }
-    }
-    //add customer
-
-    //updating customer
-    public function updateCustomer(Request $request, $id)
-    {
-        try {
-            $user = Customers::find($id);
-
-            if (!$user) {
-                return response()->json(['success' => false, 'message' => 'No customer found!'], 404);
-            }
-
-            $validatedData = $request->validate([
-                'name' => 'required|string|max:255',
-                'email' => 'required|email|max:255',
-                'phone' => 'required|regex:/^[0-9]+$/|max:20',
-                'address' => 'required|string|max:400',
-                'upload_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
-                // Add more validation rules for other fields
-            ]);
-            if ($request->hasFile('upload_image')) {
-
-                $path = 'public/customer_images/' . $user->customer_image;
-                // dd($path);
-                if ($path) {
-                    Storage::delete($path);
-                }
-
-                $image = $request->file('upload_image');
-                $ext = $image->getClientOriginalExtension();
-                $imageName = time() . "." . $ext;
-                $image->storeAs('public/customer_images', $imageName);
-                $user->customer_image = $imageName;
-            }
-
-
-            $fbAcc = $request->input('fb_acc');
-            $igAcc = $request->input('ig_acc');
-            $ttAcc = $request->input('tt_acc');
-
-            $socailLinks = "$fbAcc,$igAcc,$ttAcc";
-
-
-            $user->customer_name = $validatedData['name'];
-            $user->customer_email = $validatedData['email'];
-            $user->customer_phone = $validatedData['phone'];
-            $user->customer_address = $validatedData['address'];
-            $user->customer_social_links = $socailLinks;
-            $user->app_url = $this->appUrl;
-            $user->update();
-
-            return response()->json(['success' => true, 'message' => 'Customer updated successfully'], 200);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
-        }
-    }
-    //updating customer
-
-    //----------------------------------------------------Customer APIs------------------------------------------------------//
 
     //getting dashboard
     public function adminDashboard()

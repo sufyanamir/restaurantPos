@@ -76,7 +76,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //image gallery
 
     //Order
-   // Route::post('/createOrder', [OrderController::class, 'createOrder']);
+    Route::post('/createOrder', [ApiController::class, 'createOrder']);
     Route::get('/getOrders', [ApiController::class, 'getOrders']);
     Route::get('/getOrder', [ApiController::class, 'getOrderDetails']);
     Route::post('/updateOrderStatus', [ApiController::class, 'updateOrderStatus']);
@@ -128,4 +128,4 @@ Route::post('/resetPassword', [ApiController::class, 'resetPassword']);
 
 //delete
 
-Route::post('/createOrder', [OrderController::class, 'createOrder']);
+// Route::post('/createOrder', [OrderController::class, 'createOrder']);
