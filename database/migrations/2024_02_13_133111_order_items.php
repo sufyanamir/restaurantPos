@@ -18,6 +18,7 @@ return new class extends Migration
             $table->integer('order_main_id');
             $table->integer('product_id');
             $table->integer('product_qty');
+            $table->double('product_price');
             $table->text('product_variations')->nullable();
             $table->text('product_add_ons')->nullable();
             $table->timestamp('created_at')->useCurrent();
