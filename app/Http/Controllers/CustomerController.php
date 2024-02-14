@@ -66,7 +66,7 @@ class CustomerController extends Controller
             'added_user_id' => $validatedData['added_user_id'],
             'customer_social_links' => $socailLinks,
             'customer_status' => $status,
-            'app_url' => 'https://scubadiving.thewebconcept.tech/',
+            'app_url' => 'https://twcpos.thewebconcept.tech/',
             // Add other fields as needed
         ];
 

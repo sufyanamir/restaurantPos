@@ -59,7 +59,7 @@ class StaffController extends Controller
             'company_id' => $validatedData['company_id'],
             'social_links' => $socailLinks,
             'user_role' => '2',
-            'app_url' => 'https://scubadiving.thewebconcept.tech/',
+            'app_url' => 'https://twcpos.thewebconcept.tech/',
             'password' => md5($password),
             // Add other fields as needed
         ];
