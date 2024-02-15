@@ -37,13 +37,12 @@ use Illuminate\Validation\Rules\Unique;
 class ApiController extends Controller
 {
     protected $appUrl = 'https://twcpos.thewebconcept.tech/';
-    
+
     //----------------------------------------------------kitchen screen APIs------------------------------------------------------//
     // create order
     public function createOrder(Request $request)
     {
         try {
-
             $user = Auth::user();
 
             $validatedData = $request->validate([
@@ -79,7 +78,9 @@ class ApiController extends Controller
                 'info.table_no' => 'nullable|numeric',
                 'info.table_capacity' => 'nullable|numeric',
                 'info.branch_id' => 'nullable|numeric',
-            ]);            
+            ]);
+
+            DB::beginTransaction();
 
             $order = Orders::create([
                 'added_user_id' => $validatedData['userId'],
@@ -128,17 +129,20 @@ class ApiController extends Controller
                         'product_add_ons' => json_encode($cartItem['add_on']),
                     ]);
                 }
-            }            
+            }
+
+            DB::commit();
 
             return response()->json(['success' => true, 'message' => 'Order Created!', 'createdAt' => $order->order_no, 'isUploaded' => $order->is_uploaded], 200);
-            
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
     }
+
     // create order
     //----------------------------------------------------kitchen screen APIs------------------------------------------------------//
-    
+
     //----------------------------------------------------kitchen screen APIs------------------------------------------------------//
 
     // delete table
@@ -729,7 +733,7 @@ class ApiController extends Controller
                 }
             }
             $addedProduct = Products::with('variations', 'add_ons', 'category')->find($product->product_id);
-            
+
             $kitchen = Kitchen::where('kitchen_id', $addedProduct->category->kitchen_id)->first();
 
             return response()->json(['success' => true, 'message' => 'product added successfully!', 'data' => [
@@ -1099,7 +1103,7 @@ class ApiController extends Controller
     //post image
     //----------------------------------------------------Image APIs------------------------------------------------------//
 
-    
+
 
     //----------------------------------------------------Service APIs------------------------------------------------------//
     //get service detail
