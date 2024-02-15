@@ -64,7 +64,7 @@ class ApiController extends Controller
                 'cartItems.*.product_id' => 'required',
                 'cartItems.*.qty' => 'required|numeric',
                 'cartItems.*.price' => 'required|numeric',
-                'cartItems.*.product_variations' => 'nullable',
+                'cartItems.*.product_variation' => 'nullable',
                 'cartItems.*.title' => 'nullable',
                 'cartItems.*.add_on' => 'nullable',
                 'cartItems.*.additional_item' => 'required',
@@ -124,7 +124,7 @@ class ApiController extends Controller
                         'product_id' => $cartItem['product_id'],
                         'product_qty' => $cartItem['qty'],
                         'product_price' => $cartItem['price'],
-                        'product_variations' => json_encode($cartItem['product_variations']),
+                        'product_variations' => json_encode($cartItem['product_variation']),
                         'product_add_ons' => json_encode($cartItem['add_on']),
                     ]);
                 }
