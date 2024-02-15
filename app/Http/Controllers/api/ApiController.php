@@ -80,6 +80,8 @@ class ApiController extends Controller
                 'info.branch_id' => 'nullable|numeric',
             ]);
 
+            $orderedUser = User::where('id', $validatedData['userId'])->first();
+
             DB::beginTransaction();
 
             $order = Orders::create([
@@ -108,6 +110,8 @@ class ApiController extends Controller
                 'branch_id' => $validatedData['info']['branch_id'],
                 'waiter_id' => $validatedData['info']['waiter'],
                 'waiter_name' => $validatedData['info']['waiterName'],
+                'company_id' => $user->company_id,
+                'user_branch_id' => $user->user_branch_id,
             ]);
 
             foreach ($validatedData['cartItems'] as $cartItem) {
