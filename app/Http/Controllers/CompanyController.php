@@ -20,7 +20,7 @@ class CompanyController extends Controller
 
         $company = DB::table('users')
             ->join('company', 'users.company_id', '=', 'company.company_id')
-            ->where('users.user_role', 1)
+            ->where('users.user_role', 'admin')
             ->select('users.*', 'company.*')
             ->get();
         return view('company', [
@@ -159,7 +159,7 @@ class CompanyController extends Controller
         $company->update();
 
 
-        $user = $company->users()->where('user_role', 1)->first();
+        $user = $company->users()->where('user_role', 'admin')->first();
 
 
         if (!$user) {

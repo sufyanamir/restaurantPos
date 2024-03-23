@@ -18,7 +18,7 @@ class DashboardController extends Controller
         
         $customersCount=Customers::where('added_user_id', $userId)->count();
         $servicesCount=Services::where('added_user_id', $userId)->count();
-        $adminCount = User::where('user_role',1)->count();
+        $adminCount = User::where('user_role', 'admin')->count();
         $adminCustomerCount = Customers::count();
         $staffCount = User::where('user_role',2)->where('company_id', $companyId)->count();
         $user_details = session('user_details');
