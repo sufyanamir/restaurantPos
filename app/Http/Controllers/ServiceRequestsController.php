@@ -76,7 +76,7 @@ class ServiceRequestsController extends Controller
                 'address' => $requestedCompany->req_address,
                 'password' => md5($password),
                 'company_id' => $companyId,
-                'user_role' => '1',
+                'user_role' => 'admin',
             ]);
 
 
