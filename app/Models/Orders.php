@@ -39,6 +39,7 @@ class Orders extends Model
         'branch_id',
         'waiter_id',
         'waiter_name',
+        'status',
     ];
 
     public $timestamps = true;
