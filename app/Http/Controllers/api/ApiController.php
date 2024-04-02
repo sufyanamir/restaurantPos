@@ -39,6 +39,63 @@ class ApiController extends Controller
     protected $appUrl = 'https://twcpos.thewebconcept.tech/';
 
     //----------------------------------------------------kitchen screen APIs------------------------------------------------------//
+    // get order
+    public function getOrders(Request $request)
+{
+    $user = Auth::user();
+
+    // Get fromDate, toDate, and filterBy from the request
+    $fromDate = $request->input('fromDate');
+    $toDate = $request->input('toDate');
+    $filterBy = $request->input('filterBy');
+
+    // Query orders with filtering by date range and company_id
+    $ordersQuery = Orders::with('order_items', 'additional_items')
+        ->where('company_id', $user->company_id);
+
+    // Apply date range filter if fromDate and toDate are provided
+    if ($fromDate && $toDate) {
+        if ($fromDate === $toDate) {
+            // If fromDate and toDate are the same, include orders created on that specific date
+            $ordersQuery->whereDate('created_at', $fromDate);
+        } else {
+            // If fromDate and toDate are different, use whereBetween
+            $ordersQuery->whereBetween('created_at', [$fromDate . ' 00:00:00', $toDate . ' 23:59:59']);
+        }
+    }
+
+    // Apply additional filters based on filterBy parameter
+    if ($filterBy) {
+        switch ($filterBy) {
+            case 'today':
+                $ordersQuery->whereDate('created_at', today());
+                break;
+            case 'yesterday':
+                $ordersQuery->whereDate('created_at', now()->subDay());
+                break;
+            case 'last_three_days':
+                $ordersQuery->whereDate('created_at', '>=', now()->subDays(3)->startOfDay());
+                break;
+            case 'last_week':
+                $ordersQuery->whereDate('created_at', '>=', now()->subWeek()->startOfDay());
+                break;
+            case 'last_month':
+                $ordersQuery->whereDate('created_at', '>=', now()->subMonth()->startOfDay());
+                break;
+            default:
+                // Do nothing for unknown filterBy values
+                break;
+        }
+    }
+
+    // Fetch the filtered orders
+    $orders = $ordersQuery->get();
+
+    return response()->json(['success' => true, 'data' => $orders], 200);
+}
+
+    // get order
+
     // create order
     public function createOrder(Request $request)
     {
