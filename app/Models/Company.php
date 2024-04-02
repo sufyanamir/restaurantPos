@@ -53,6 +53,8 @@ public function customers()
         'currency',
         'kitchen_slip',
         'service_charges',
+        'ui_layout',
+        'print_bill_border',
     ];
 
     public $timestamps = true;

@@ -1981,6 +1981,8 @@ class ApiController extends Controller
                 'kitchenSlip' => 'nullable|string',
                 'address' => 'nullable|string',
                 'serviceCharges'  => 'nullable|numeric',
+                'uiLayout' => 'nullable',
+                'printBillBorder' => 'nullable',
             ]);
 
             $company = Company::where('company_id', $user->company_id)->first();
@@ -1998,6 +2000,8 @@ class ApiController extends Controller
             $company->kitchen_slip = $validatedData['kitchenSlip'];
             $company->company_address = $validatedData['address'];
             $company->service_charges = $validatedData['serviceCharges'];
+            $company->ui_layout = $validatedData['uiLayout'];
+            $company->print_bill_border = $validatedData['printBillBorder'];
 
             $company->save();
 
@@ -2012,6 +2016,8 @@ class ApiController extends Controller
                 'kitchenSlip' => $company->kitchen_slip,
                 'address' => $company->company_address,
                 'serviceCharges' => $company->service_charges,
+                'uiLayout' => $company->ui_layout,
+                'print_bill_border' => $company->printBillBorder,
             ]]], 200);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
