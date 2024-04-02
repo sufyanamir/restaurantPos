@@ -57,6 +57,7 @@ class ApiController extends Controller
                 'saleTax' => 'nullable|numeric',
                 'serviceCharges' => 'nullable|numeric',
                 'change' => 'required|numeric',
+                'status' => 'required|string',
                 'finalTotal' => 'required|numeric',
                 'grandTotal' => 'required|numeric',
                 'cartItems' => 'required|array',
@@ -112,6 +113,7 @@ class ApiController extends Controller
                 'waiter_name' => $validatedData['info']['waiterName'],
                 'company_id' => $user->company_id,
                 'user_branch_id' => $user->user_branch_id,
+                'status' => $validatedData['status'],
             ]);
 
             foreach ($validatedData['cartItems'] as $cartItem) {
