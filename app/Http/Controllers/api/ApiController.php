@@ -139,7 +139,7 @@ class ApiController extends Controller
 
             DB::commit();
 
-            return response()->json(['success' => true, 'message' => 'Order Created!', 'createdAt' => $order->order_no, 'isUploaded' => $order->is_uploaded], 200);
+            return response()->json(['success' => true, 'message' => 'Order Created!', 'createdAt' => $order->order_no, 'isUploaded' => $order->is_uploaded, 'status' => $order->status], 200);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
