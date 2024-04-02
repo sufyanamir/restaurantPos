@@ -9,6 +9,16 @@ class Orders extends Model
 {
     use HasFactory;
 
+    public function order_items()
+    {
+        return $this->hasMany(OrderItems::class, 'order_main_id');
+    }
+
+    public function additional_items()
+    {
+        return $this->hasMany(OrderAdditionalItems::class, 'order_main_id');
+    }
+
     protected $table = 'orders';
 
     protected $primaryKey = 'order_main_id';
@@ -40,6 +50,8 @@ class Orders extends Model
         'waiter_id',
         'waiter_name',
         'status',
+        'company_id',
+        'user_branch_id',
     ];
 
     public $timestamps = true;

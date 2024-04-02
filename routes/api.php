@@ -77,7 +77,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //Order
     Route::post('/createOrder', [ApiController::class, 'createOrder']);
-    Route::get('/getOrders', [ApiController::class, 'getOrders']);
+    // Route::get('/getOrders', [ApiController::class, 'getOrders']);
+    Route::match(['get', 'post'], '/getOrders', [ApiController::class, 'getOrders']);
     Route::get('/getOrder', [ApiController::class, 'getOrderDetails']);
     Route::post('/updateOrderStatus', [ApiController::class, 'updateOrderStatus']);
     //Order
