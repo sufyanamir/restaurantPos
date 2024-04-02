@@ -14,11 +14,13 @@ return new class extends Migration
     public function up()
     {
         Schema::table('company', function (Blueprint $table) {
-            $table->float('sale_tax')->nullable();
+            $table->float('sale_tax')->nullable()->default(0);
             $table->string('inventory')->nullable()->default('no');
-            $table->string('currency')->nullable();
-            $table->string('kitchen_slip')->nullable()->default('no');
-            $table->integer('service_charges')->nullable();
+            $table->string('currency')->nullable()->default('USD');
+            $table->string('kitchen_slip')->nullable()->default('yes');
+            $table->integer('service_charges')->nullable()->default(0);
+            $table->string('ui_layout')->default('1');
+            $table->string('print_bill_border')->default('0');
         });
     }
 
