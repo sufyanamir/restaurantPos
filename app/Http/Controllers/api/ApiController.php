@@ -1956,6 +1956,8 @@ class ApiController extends Controller
                 'serviceCharges' => $company->service_charges,
                 'app_url' => $company->app_url,
                 'company_image' => $company->company_image,
+                'uiLayout' => $company->ui_layout,
+                'printBillBorder' => $company->print_bill_border,
             ];
 
             return response()->json(['success' => true, 'data' => ['company_details' => $companyDetails]], 200);
@@ -2017,7 +2019,7 @@ class ApiController extends Controller
                 'address' => $company->company_address,
                 'serviceCharges' => $company->service_charges,
                 'uiLayout' => $company->ui_layout,
-                'print_bill_border' => $company->printBillBorder,
+                'printBillBorder' => $company->print_bill_border,
             ]]], 200);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
