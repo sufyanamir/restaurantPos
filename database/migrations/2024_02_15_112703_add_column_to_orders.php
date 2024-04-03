@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::table('orders', function (Blueprint $table) {
             $table->integer('company_id');
-            $table->integer('user_branch_id');
+            $table->integer('user_branch_id')->nullable();
             $table->string('status');
         });
     }

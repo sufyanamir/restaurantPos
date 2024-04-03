@@ -169,7 +169,7 @@ class ApiController extends Controller
                 'waiter_id' => $validatedData['info']['waiter'],
                 'waiter_name' => $validatedData['info']['waiterName'],
                 'company_id' => $user->company_id,
-                'user_branch_id' => $user->user_branch_id,
+                'user_branch_id' => $user->user_branch,
                 'status' => $validatedData['status'],
             ]);
 
