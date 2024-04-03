@@ -41,58 +41,131 @@ class ApiController extends Controller
     //----------------------------------------------------kitchen screen APIs------------------------------------------------------//
     // get order
     public function getOrders(Request $request)
-{
-    $user = Auth::user();
+    {
+        $user = Auth::user();
 
-    // Get fromDate, toDate, and filterBy from the request
-    $fromDate = $request->input('fromDate');
-    $toDate = $request->input('toDate');
-    $filterBy = $request->input('filterBy');
+        // Get fromDate, toDate, and filterBy from the request
+        $fromDate = $request->input('fromDate');
+        $toDate = $request->input('toDate');
+        $filterBy = $request->input('filterBy');
 
-    // Query orders with filtering by date range and company_id
-    $ordersQuery = Orders::with('order_items', 'additional_items')
-        ->where('company_id', $user->company_id);
+        // Query orders with filtering by date range and company_id
+        $ordersQuery = Orders::with('order_items', 'additional_items')
+            ->where('company_id', $user->company_id);
 
-    // Apply date range filter if fromDate and toDate are provided
-    if ($fromDate && $toDate) {
-        if ($fromDate === $toDate) {
-            // If fromDate and toDate are the same, include orders created on that specific date
-            $ordersQuery->whereDate('created_at', $fromDate);
-        } else {
-            // If fromDate and toDate are different, use whereBetween
-            $ordersQuery->whereBetween('created_at', [$fromDate . ' 00:00:00', $toDate . ' 23:59:59']);
+        // Apply date range filter if fromDate and toDate are provided
+        if ($fromDate && $toDate) {
+            if ($fromDate === $toDate) {
+                // If fromDate and toDate are the same, include orders created on that specific date
+                $ordersQuery->whereDate('created_at', $fromDate);
+            } else {
+                // If fromDate and toDate are different, use whereBetween
+                $ordersQuery->whereBetween('created_at', [$fromDate . ' 00:00:00', $toDate . ' 23:59:59']);
+            }
         }
-    }
 
-    // Apply additional filters based on filterBy parameter
-    if ($filterBy) {
-        switch ($filterBy) {
-            case 'today':
-                $ordersQuery->whereDate('created_at', today());
-                break;
-            case 'yesterday':
-                $ordersQuery->whereDate('created_at', now()->subDay());
-                break;
-            case 'last_three_days':
-                $ordersQuery->whereDate('created_at', '>=', now()->subDays(3)->startOfDay());
-                break;
-            case 'last_week':
-                $ordersQuery->whereDate('created_at', '>=', now()->subWeek()->startOfDay());
-                break;
-            case 'last_month':
-                $ordersQuery->whereDate('created_at', '>=', now()->subMonth()->startOfDay());
-                break;
-            default:
-                // Do nothing for unknown filterBy values
-                break;
+        // Apply additional filters based on filterBy parameter
+        if ($filterBy) {
+            switch ($filterBy) {
+                case 'today':
+                    $ordersQuery->whereDate('created_at', today());
+                    break;
+                case 'yesterday':
+                    $ordersQuery->whereDate('created_at', now()->subDay());
+                    break;
+                case 'last_three_days':
+                    $ordersQuery->whereDate('created_at', '>=', now()->subDays(3)->startOfDay());
+                    break;
+                case 'last_week':
+                    $ordersQuery->whereDate('created_at', '>=', now()->subWeek()->startOfDay());
+                    break;
+                case 'last_month':
+                    $ordersQuery->whereDate('created_at', '>=', now()->subMonth()->startOfDay());
+                    break;
+                default:
+                    // Do nothing for unknown filterBy values
+                    break;
+            }
         }
+
+        // Fetch the filtered orders
+        $orders = $ordersQuery->get();
+
+        // Map the original response data to a new structure with changed variable names
+        $mappedOrders = $orders->map(function ($order) {
+            $cartItems = array_merge(
+                $order->order_items->map(function ($item) {
+                    $product = Products::find($item->product_id);
+                    $category = null;
+                    $kitchen = null;
+                    if ($product) {
+                        $category = ProductCategory::find($product->category_id);
+                        if ($category) {
+                            // Fetch kitchen details based on kitchen_id from the category
+                            $kitchen = Kitchen::find($category->kitchen_id);
+                        }
+                    }
+                    return [
+                        'qty' => $item->product_qty,
+                        'price' => $item->product_price,
+                        'title' => $product->product_name,
+                        'add_on' => json_decode($item->product_add_ons),
+                        'variations' => json_decode($item->product_variations),
+                        'product_id' => $item->product_id,
+                        'category' => $category->category_name,
+                        'product_variation' => json_decode($item->product_variations),
+                        'kitchen_id' => $kitchen->kitchen_id,
+                        'category_id' => $category->category_id,
+                        'branch_id' => $product->branch_id,
+                        'kitchen_name' => $kitchen->kitchen_name,
+                        'category_name' => $category->category_name,
+                        'product_code' => $product->product_code,
+                        'favurite_item' => $product->favourite_item,
+                        'additional_item' => 0,
+                    ];
+                })->toArray(),
+                $order->additional_items->map(function($additionalItem){
+                    return [
+                        'qty' => $additionalItem->product_qty,
+                        'price' => $additionalItem->price,
+                        'title' => $additionalItem->title,
+                        'product_id' => $additionalItem->product_id,
+                        'additional_item' => 1,
+                    ];
+                })->toArray()
+            );
+            return [
+                'info' => [
+                    'phone' => $order->phone,
+                    'customerName' => $order->customer_name,
+                    'assignRider' => $order->assign_rider,
+                    'address' => $order->customer_address,
+                    'table_id' => $order->table_id,
+                    'table_location' => $order->table_location,
+                    'table_no' => $order->table_no,
+                    'table_capacity' => $order->table_capacity,
+                    'branch_id' => $order->branch_id,
+                    'waiter' => $order->waiter_id,
+                    'waiterName' => $order->waiter_name,
+                ],
+                'cartItems' => $cartItems,
+                'type' => $order->order_type,
+                'createdAt' => $order->order_no,
+                'subTotal' => $order->order_sub_total,
+                'status' => $order->status,
+                'userId' => $order->added_user_id,
+                'id' => $order->order_id,
+                'grandTotal' => $order->order_grand_total,
+                'finalTotal' => $order->order_final_total,
+                'discount' => $order->order_discount,
+                'change' => $order->order_change,
+                'split' => $order->order_split,
+                'isUploaded' => $order->is_uploaded,
+            ];
+        });
+
+        return response()->json(['success' => true, 'data' => $mappedOrders], 200);
     }
-
-    // Fetch the filtered orders
-    $orders = $ordersQuery->get();
-
-    return response()->json(['success' => true, 'data' => $orders], 200);
-}
 
     // get order
 
