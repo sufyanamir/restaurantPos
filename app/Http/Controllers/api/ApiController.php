@@ -90,6 +90,10 @@ class ApiController extends Controller
 
         // Fetch the filtered orders
         $orders = $ordersQuery->get();
+$ordersTotal = 0;
+        foreach($orders as $order){
+            $ordersTotal = $order->sum('order_final_total');
+        }
 
         // Map the original response data to a new structure with changed variable names
         $mappedOrders = $orders->map(function ($order) {
@@ -155,8 +159,8 @@ class ApiController extends Controller
                 'status' => $order->status,
                 'userId' => $order->added_user_id,
                 'id' => $order->order_id,
-                'grandTotal' => $order->order_grand_total,
-                'finalTotal' => $order->order_final_total,
+                'grandTotal' => number_format($order->order_grand_total, 2),
+                'finalTotal' => number_format($order->order_final_total, 2),
                 'discount' => $order->order_discount,
                 'change' => $order->order_change,
                 'split' => $order->order_split,
@@ -164,7 +168,7 @@ class ApiController extends Controller
             ];
         });
 
-        return response()->json(['success' => true, 'data' => $mappedOrders], 200);
+        return response()->json(['success' => true, 'ordersTotal' => $ordersTotal, 'data' => $mappedOrders], 200);
     }
 
     // get order
