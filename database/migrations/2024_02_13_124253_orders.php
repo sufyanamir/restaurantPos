@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id('order_main_id');
             $table->integer('added_user_id');
             $table->integer('order_id');
-            $table->bigInteger('order_no')->unique();
+            $table->text('order_no')->unique();
             $table->string('order_type');
             $table->double('order_sub_total');
             $table->double('order_discount')->default(0);
