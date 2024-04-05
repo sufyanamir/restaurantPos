@@ -90,8 +90,8 @@ class ApiController extends Controller
 
         // Fetch the filtered orders
         $orders = $ordersQuery->get();
-$ordersTotal = 0;
-        foreach($orders as $order){
+        $ordersTotal = 0;
+        foreach ($orders as $order) {
             $ordersTotal = $order->sum('order_final_total');
         }
 
@@ -110,30 +110,30 @@ $ordersTotal = 0;
                         }
                     }
                     return [
-                        'qty' => $item->product_qty,
-                        'price' => $item->product_price,
+                        'qty' => (int)$item->product_qty,
+                        'price' => (int)$item->product_price,
                         'title' => $product->product_name,
                         'add_on' => json_decode($item->product_add_ons),
                         'variations' => json_decode($item->product_variations),
-                        'product_id' => $item->product_id,
+                        'product_id' => (int)$item->product_id,
                         'category' => $category->category_name,
                         'product_variation' => json_decode($item->product_variations),
-                        'kitchen_id' => $kitchen->kitchen_id,
-                        'category_id' => $category->category_id,
-                        'branch_id' => $product->branch_id,
+                        'kitchen_id' => (int)$kitchen->kitchen_id,
+                        'category_id' => (int)$category->category_id,
+                        'branch_id' => (int)$product->branch_id,
                         'kitchen_name' => $kitchen->kitchen_name,
                         'category_name' => $category->category_name,
                         'product_code' => $product->product_code,
-                        'favurite_item' => $product->favourite_item,
+                        'favurite_item' => (int)$product->favourite_item,
                         'additional_item' => 0,
                     ];
                 })->toArray(),
-                $order->additional_items->map(function($additionalItem){
+                $order->additional_items->map(function ($additionalItem) {
                     return [
-                        'qty' => $additionalItem->product_qty,
-                        'price' => $additionalItem->price,
+                        'qty' => (int)$additionalItem->product_qty,
+                        'price' => (int)$additionalItem->price,
                         'title' => $additionalItem->title,
-                        'product_id' => $additionalItem->product_id,
+                        'product_id' => (int)$additionalItem->product_id,
                         'additional_item' => 1,
                     ];
                 })->toArray()
@@ -154,19 +154,19 @@ $ordersTotal = 0;
                 ],
                 'cartItems' => $cartItems,
                 'type' => $order->order_type,
-                'createdAt' => $order->order_no,
-                'subTotal' => $order->order_sub_total,
+                'createdAt' => (int)$order->order_no, // Assuming order_no is a numeric field
+                'subTotal' => (int)$order->order_sub_total,
                 'status' => $order->status,
-                'userId' => $order->added_user_id,
-                'id' => $order->order_id,
-                'grandTotal' => number_format($order->order_grand_total, 2),
-                'finalTotal' => number_format($order->order_final_total, 2),
-                'discount' => $order->order_discount,
-                'change' => $order->order_change,
-                'split' => $order->order_split,
-                'isUploaded' => $order->is_uploaded,
+                'userId' => (int)$order->added_user_id,
+                'id' => (int)$order->order_id,
+                'grandTotal' => (float)$order->order_grand_total, // Converted to float to maintain decimal points
+                'finalTotal' => (float)$order->order_final_total, // Converted to float to maintain decimal points
+                'discount' => (float)$order->order_discount, // Converted to float to maintain decimal points
+                'change' => (float)$order->order_change, // Converted to float to maintain decimal points
+                'split' => (int)$order->order_split,
+                'isUploaded' => (int)$order->is_uploaded,
             ];
-        });
+        });        
 
         return response()->json(['success' => true, 'ordersTotal' => $ordersTotal, 'data' => $mappedOrders], 200);
     }
