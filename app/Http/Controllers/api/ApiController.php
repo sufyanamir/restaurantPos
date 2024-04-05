@@ -154,7 +154,7 @@ class ApiController extends Controller
                 ],
                 'cartItems' => $cartItems,
                 'type' => $order->order_type,
-                'createdAt' => (int)$order->order_no, // Assuming order_no is a numeric field
+                'createdAt' => $order->order_no, // Assuming order_no is a numeric field
                 'subTotal' => (int)$order->order_sub_total,
                 'status' => $order->status,
                 'userId' => (int)$order->added_user_id,
@@ -182,7 +182,7 @@ class ApiController extends Controller
             $validatedData = $request->validate([
                 'userId' => 'required|numeric',
                 'id' => 'required|numeric',
-                'createdAt' => 'required|numeric',
+                'createdAt' => 'required|string',
                 'type' => 'required|string',
                 'split' => 'nullable|numeric',
                 'splittedAmount' => 'nullable|numeric',
