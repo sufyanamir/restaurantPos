@@ -182,7 +182,7 @@ class ApiController extends Controller
             $validatedData = $request->validate([
                 'userId' => 'required|numeric',
                 'id' => 'required|numeric',
-                'createdAt' => 'required|string',
+                'createdAt' => 'required',
                 'type' => 'required|string',
                 'split' => 'nullable|numeric',
                 'splittedAmount' => 'nullable|numeric',
