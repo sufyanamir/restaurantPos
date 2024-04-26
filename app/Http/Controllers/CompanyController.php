@@ -53,7 +53,7 @@ class CompanyController extends Controller
                 'company_email' => $validatedData['email'],
                 'company_phone' => $validatedData['phone'],
                 'company_address' => $validatedData['address'],
-                'app_url' => 'https://twcpos.thewebconcept.tech/',
+                'app_url' => 'https://adminpos.thewebconcept.com/',
             ];
 
             // Upload and store the company image if it exists
@@ -76,7 +76,7 @@ class CompanyController extends Controller
                 'password' => md5($validatedData['password']),
                 'company_id' => $companyID,
                 'user_role' => 'admin',
-                'app_url' => 'https://twcpos.thewebconcept.tech/',
+                'app_url' => 'https://adminpos.thewebconcept.com/',
                 // Add other fields as needed
             ]);
 

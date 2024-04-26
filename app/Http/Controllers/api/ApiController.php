@@ -36,7 +36,7 @@ use Illuminate\Validation\Rules\Unique;
 
 class ApiController extends Controller
 {
-    protected $appUrl = 'https://twcpos.thewebconcept.tech/';
+    protected $appUrl = 'https://adminpos.thewebconcept.com/';
 
     //----------------------------------------------------kitchen screen APIs------------------------------------------------------//
     // get order
