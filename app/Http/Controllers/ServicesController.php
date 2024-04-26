@@ -90,7 +90,7 @@ class ServicesController extends Controller
             'added_user_id' => $validatedData['added_user_id'],
             'company_id' => $validatedData['company_id'],
             'service_duration' => $validatedData['service_duration'],
-            'app_url' => 'https://twcpos.thewebconcept.tech/',
+            'app_url' => 'https://adminpos.thewebconcept.com/',
         ]);
 
         // Upload and store the service image if it exists
