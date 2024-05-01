@@ -52,6 +52,7 @@ class Orders extends Model
         'status',
         'company_id',
         'user_branch_id',
+        'customer_id',
     ];
 
     public $timestamps = true;

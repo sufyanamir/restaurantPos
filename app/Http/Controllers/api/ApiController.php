@@ -30,6 +30,7 @@ use App\Models\OrderAdditionalItems;
 use App\Models\ProductCategory;
 use App\Models\Products;
 use App\Models\RestaurantTables;
+use App\Models\Trasanctions;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rules\Unique;
@@ -39,6 +40,117 @@ class ApiController extends Controller
     protected $appUrl = 'https://adminpos.thewebconcept.com/';
 
     //----------------------------------------------------kitchen screen APIs------------------------------------------------------//
+    // update customer
+    public function updateCustomer(Request $request)
+    {
+        try {
+            $user = Auth::user();
+
+            $validatedData = $request->validate([
+                'customer_id' => 'required',
+                'customerName' => 'required|string',
+                'address' => 'required|string',
+                'phone' => 'required|numeric',
+                'openingBalance' => 'nullable|numeric',
+                'customer_email' => 'nullable',
+            ]);
+
+            $customer = Customers::find($validatedData['customer_id']);
+
+            if (!$customer) {
+                return response()->json(['success' => false, 'message' => 'Customer not found!'], 404);
+            }
+
+            $customer->customer_name = $validatedData['customerName'];
+            $customer->customer_address = $validatedData['address'];
+            $customer->customer_phone = $validatedData['phone'];
+            $customer->opening_balance = $validatedData['openingBalance'];
+            $customer->customer_email = $validatedData['customer_email'];
+
+            $customer->save();
+
+            return response()->json(['success' => true, 'message' => 'Customer updated successfully!'], 200);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+    // update customer
+    
+    // get customer
+    public function getCustomers()
+    {
+        $user = Auth::user();
+        $customers = Customers::where('company_id', $user->company_id)->where('branch_id', $user->user_branch)->get();
+
+        $responseData = [];
+        foreach ($customers as $customer) {
+            $responseData[] = [
+                'customer_id' => $customer->customer_id,
+                'customerName' => $customer->customer_name,
+                'customer_email' => $customer->customer_email,
+                'phone' => $customer->customer_phone,
+                'address' => $customer->customer_address,
+                'openingBalance' => $customer->opening_balance,
+            ];
+        }
+
+        return response()->json(['success' => true, 'data' => $responseData], 200);
+    }
+    // get customer
+
+    // add customer
+    public function addCustomer(Request $request)
+    {
+        try {
+
+            $user = Auth::user();
+
+            $validatedData = $request->validate([
+                'customerName' => 'required|string',
+                'address' => 'required|string',
+                'phone' => 'required|numeric',
+                'openingBalance' => 'nullable|numeric',
+                'customer_email' => 'nullable',
+            ]);
+
+            $customer = Customers::create([
+                'company_id' => $user->company_id,
+                'branch_id' => $user->user_branch,
+                'added_user_id' => $user->id,
+                'customer_name' => $validatedData['customerName'],
+                'customer_email' => $validatedData['customer_email'],
+                'customer_phone' => $validatedData['phone'],
+                'customer_address' => $validatedData['address'],
+                'opening_balance' => $validatedData['openingBalance'],
+            ]);
+
+            if ($validatedData['openingBalance'] != null) {
+                $transaction = Trasanctions::create([
+                    'company_id' => $user->company_id,
+                    'branch_id' => $user->user_branch,
+                    'added_user_id' => $user->id,
+                    'customer_id' => $customer->customer_id,
+                    'opening_balance' => $validatedData['openingBalance'],
+                ]);
+            }
+
+            $responseData = [
+                'customer_id' => $customer->customer_id,
+                'customerName' => $customer->customer_name,
+                'customer_email' => $customer->customer_email,
+                'phone' => $customer->customer_phone,
+                'address' => $customer->customer_address,
+                'openingBalance' => $customer->opening_balance,
+            ];
+
+            return response()->json(['success' => true, 'message' => 'Customer added successfully!', 'added_customer' => $responseData], 200);
+        } catch (\Exception $e) {
+            return response()->json(['scuccess' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+    // add customer
+
     // get order
     public function getOrders(Request $request)
     {
@@ -166,7 +278,7 @@ class ApiController extends Controller
                 'split' => (int)$order->order_split,
                 'isUploaded' => (int)$order->is_uploaded,
             ];
-        });        
+        });
 
         return response()->json(['success' => true, 'ordersTotal' => $ordersTotal, 'data' => $mappedOrders], 200);
     }
@@ -213,6 +325,8 @@ class ApiController extends Controller
                 'info.table_no' => 'nullable|numeric',
                 'info.table_capacity' => 'nullable|numeric',
                 'info.branch_id' => 'nullable|numeric',
+                'info.customer_id' => 'nullable|numeric',
+                'credited_amount' => 'nullable',
             ]);
 
             $orderedUser = User::where('id', $validatedData['userId'])->first();
@@ -248,6 +362,7 @@ class ApiController extends Controller
                 'company_id' => $user->company_id,
                 'user_branch_id' => $user->user_branch,
                 'status' => $validatedData['status'],
+                'customer_id' => $validatedData['info']['customer_id'],
             ]);
 
             foreach ($validatedData['cartItems'] as $cartItem) {
@@ -269,6 +384,16 @@ class ApiController extends Controller
                         'product_add_ons' => json_encode($cartItem['add_on']),
                     ]);
                 }
+            }
+            if ($validatedData['credited_amount'] != null) {
+                $transaction = Trasanctions::create([
+                    'company_id' => $user->company_id,
+                    'branch_id' => $user->user_branch,
+                    'added_user_id' => $user->id,
+                    'order_id' => $order->order_id,
+                    'credit_amount' => $validatedData['credited_amount'],
+                    'customer_id' => $validatedData['info']['customer_id'],
+                ]);
             }
 
             DB::commit();

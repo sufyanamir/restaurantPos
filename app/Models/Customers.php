@@ -20,15 +20,14 @@ class Customers extends Model
     protected $primaryKey = 'customer_id';
 
     protected $fillable = [
+        'company_id',
+        'branch_id',
+        'added_user_id',
         'customer_name',
         'customer_email',
         'customer_phone',
         'customer_address',
-        'customer_social_links',
-        'customer_image',
-        'staff_id',
-        'customer_assigned',
-        'app_url'
+        'opening_balance',
     ];
 
     public $timestamps = true;

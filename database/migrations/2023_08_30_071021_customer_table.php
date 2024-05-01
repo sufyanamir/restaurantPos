@@ -16,15 +16,13 @@ return new class extends Migration
         Schema::create('customers', function(Blueprint $table){
             $table->id('customer_id');
             $table->integer('company_id')->nullable();
+            $table->integer('branch_id')->nullable();
             $table->integer('added_user_id')->nullable();
             $table->string('customer_name');
-            $table->string('customer_email')->unique();
+            $table->string('customer_email')->nullable()->unique();
             $table->bigInteger('customer_phone');
             $table->text('customer_address');
-            $table->string('customer_social_links');
-            $table->text('customer_image')->nullable();
-            $table->integer('customer_status')->default(0);
-            $table->text('app_url')->nullable();
+            $table->integer('opening_balance')->default(0);
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->nullable()->useCurrentOnUpdate();
 
