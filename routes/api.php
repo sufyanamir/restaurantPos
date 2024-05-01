@@ -98,9 +98,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //customer APIs
     Route::post('/addCustomer', [ApiController::class, 'addCustomer']);
-    Route::post('/customer/update/{id}', [ApiController::class, 'updateCustomer']);
+    Route::post('/customer/update', [ApiController::class, 'updateCustomer']);
     Route::match(['post', 'get'], '/customer/delete/{id}', [ApiController::class, 'deleteCustomer']);
-    Route::get('/getCustomers', [ApiController::class, 'getCustomer']);
+    Route::get('/getCustomers', [ApiController::class, 'getCustomers']);
     Route::get('/getCustomer', [ApiController::class, 'getCustomerDetail']);
     //customer APIs
 
