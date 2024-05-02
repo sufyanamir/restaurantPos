@@ -69,7 +69,16 @@ class ApiController extends Controller
 
             $customer->save();
 
-            return response()->json(['success' => true, 'message' => 'Customer updated successfully!'], 200);
+            $responseData[] = [
+                'customer_id' => $customer->customer_id,
+                'customerName' => $customer->customer_name,
+                'customer_email' => $customer->customer_email,
+                'phone' => $customer->customer_phone,
+                'address' => $customer->customer_address,
+                'openingBalance' => $customer->opening_balance,
+            ];
+
+            return response()->json(['success' => true, 'message' => 'Customer updated successfully!', 'updated_customer' => $responseData], 200);
 
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
@@ -125,7 +134,7 @@ class ApiController extends Controller
                 'opening_balance' => $validatedData['openingBalance'],
             ]);
 
-            if ($validatedData['openingBalance'] != null) {
+            if ($validatedData['openingBalance'] != null && $validatedData['openingBalance'] > 0) {
                 $transaction = Trasanctions::create([
                     'company_id' => $user->company_id,
                     'branch_id' => $user->user_branch,
