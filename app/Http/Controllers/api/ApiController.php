@@ -79,13 +79,12 @@ class ApiController extends Controller
             ];
 
             return response()->json(['success' => true, 'message' => 'Customer updated successfully!', 'updated_customer' => $responseData], 200);
-
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
     }
     // update customer
-    
+
     // get customer
     public function getCustomers()
     {
@@ -122,6 +121,15 @@ class ApiController extends Controller
                 'openingBalance' => 'nullable|numeric',
                 'customer_email' => 'nullable',
             ]);
+
+            $existingCustomer = Customers::where('company_id', $user->company_id)
+                ->where('branch_id', $user->user_branch)
+                ->where('customer_phone', $validatedData['phone'])
+                ->first();
+
+            if ($existingCustomer) {
+                return response()->json(['success' => false, 'message' => 'Customer with this phone number already exists.'], 400);
+            }
 
             $customer = Customers::create([
                 'company_id' => $user->company_id,
