@@ -762,6 +762,7 @@ class ApiController extends Controller
                 'upload_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
                 'product_price' => 'nullable|numeric',
                 'category_id' => 'required|numeric',
+                'branch_id' => 'required|numeric',
                 'product_variation' => 'nullable|array',
                 'product_variation.*.variation_name' => 'nullable|string',
                 'product_variation.*.variation_price' => 'nullable|string',
@@ -785,6 +786,7 @@ class ApiController extends Controller
                 'product_name' => $validatedData['product_name'],
                 'product_price' => $validatedData['product_price'],
                 'category_id' => $validatedData['category_id'],
+                'branch_id' => $validatedData['branch_id'],
                 'app_url' => $this->appUrl,
                 'favourite_item' => $validatedData['favourite_item'],
             ]);
