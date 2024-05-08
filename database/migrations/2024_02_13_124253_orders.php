@@ -30,7 +30,7 @@ return new class extends Migration
             $table->integer('order_split_amount')->default(1);
             $table->integer('is_uploaded')->default(0);
             $table->text('customer_name')->nullable();
-            $table->bigInteger('phone')->nullable();
+            $table->text('phone')->nullable();
             $table->integer('assign_rider')->nullable();
             $table->text('customer_address')->nullable();
             $table->integer('table_id')->nullable();

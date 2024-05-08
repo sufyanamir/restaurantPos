@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id('company_id');
             $table->string('company_name')->nullable();
             $table->string('company_email')->nullable()->unique();
-            $table->bigInteger('company_phone')->nullable();
+            $table->text('company_phone')->nullable();
             $table->text('company_address')->nullable();
             $table->text('company_image')->nullable();
             $table->text('app_url')->nullable();

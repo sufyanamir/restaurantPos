@@ -20,7 +20,7 @@ return new class extends Migration
             $table->integer('added_user_id')->nullable();
             $table->string('customer_name');
             $table->string('customer_email')->nullable()->unique();
-            $table->bigInteger('customer_phone');
+            $table->text('customer_phone');
             $table->text('customer_address');
             $table->integer('opening_balance')->default(0);
             $table->timestamp('created_at')->useCurrent();

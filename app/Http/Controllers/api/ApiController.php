@@ -2259,7 +2259,7 @@ class ApiController extends Controller
             $validatedData  = $request->validate([
                 'companyName' => 'nullable|string',
                 'email' => 'nullable|string',
-                'phone' => 'nullable|regex:/^[0-9]+$/|max:20',
+                'phone' => 'nullable',
                 'saleTax' => 'nullable|numeric',
                 'inventory' => 'nullable|string',
                 'currency' => 'nullable|string',
@@ -2325,7 +2325,7 @@ class ApiController extends Controller
                 'country' => 'nullable|string',
                 'state' => 'nullable|string',
                 'city' => 'nullable|string',
-                'phone' => 'nullable|regex:/^[0-9]+$/|max:20',
+                'phone' => 'nullable',
                 'zip' => 'nullable|string',
                 'language' => 'nullable|string',
                 'password' => 'nullable',
