@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->integer('company_id')->nullable();
-            $table->bigInteger('phone')->nullable();
+            $table->text('phone')->nullable();
             $table->text('address')->nullable();
             $table->string('category')->nullable();
             $table->text('user_image')->nullable();

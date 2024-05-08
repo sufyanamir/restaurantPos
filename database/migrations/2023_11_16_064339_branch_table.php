@@ -19,7 +19,7 @@ return new class extends Migration
             $table->text('branch_code')->unique();
             $table->text('branch_name');
             $table->text('branch_email');
-            $table->double('branch_phone');
+            $table->text('branch_phone');
             $table->text('branch_address');
             $table->string('branch_manager');
             $table->timestamp('created_at')->useCurrent();
