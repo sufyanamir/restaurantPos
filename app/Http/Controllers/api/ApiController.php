@@ -346,6 +346,8 @@ class ApiController extends Controller
                 'credited_amount' => 'nullable',
             ]);
 
+            $validatedData['createdAt'] = (string) $validatedData['createdAt'];
+
             $orderedUser = User::where('id', $validatedData['userId'])->first();
 
             DB::beginTransaction();
