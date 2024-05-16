@@ -55,6 +55,7 @@ public function customers()
         'service_charges',
         'ui_layout',
         'print_bill_border',
+        'closing_time',
     ];
 
     public $timestamps = true;
