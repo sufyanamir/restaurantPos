@@ -283,7 +283,7 @@ class ApiController extends Controller
                 ],
                 'cartItems' => $cartItems,
                 'type' => $order->order_type,
-                'createdAt' => $order->order_no, // Assuming order_no is a numeric field
+                'createdAt' => (int) $order->order_no, // Assuming order_no is a numeric field
                 'subTotal' => (int)$order->order_sub_total,
                 'status' => $order->status,
                 'userId' => (int)$order->added_user_id,
@@ -417,7 +417,7 @@ class ApiController extends Controller
 
             DB::commit();
 
-            return response()->json(['success' => true, 'message' => 'Order Created!', 'createdAt' => $order->order_no, 'isUploaded' => $order->is_uploaded, 'status' => $order->status], 200);
+            return response()->json(['success' => true, 'message' => 'Order Created!', 'createdAt' => (int) $order->order_no, 'isUploaded' => $order->is_uploaded, 'status' => $order->status], 200);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
