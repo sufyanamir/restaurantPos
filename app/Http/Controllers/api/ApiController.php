@@ -180,9 +180,24 @@ class ApiController extends Controller
     $toDate = $request->input('toDate');
     $filterBy = $request->input('filterBy');
 
+    // Determine the branch_id based on user role
+    $branchId = null;
+    if ($user->user_role === 'admin') {
+        // If user is admin, use branch_id from the request
+        $branchId = $request->input('branch_id');
+    } else {
+        // If user is not admin, use branch_id associated with the user
+        $branchId = $user->branch_id;
+    }
+
     // Query orders with filtering by date range and company_id
     $ordersQuery = Orders::with('order_items', 'additional_items')
         ->where('company_id', $user->company_id);
+
+        // Apply branch_id filter if provided
+    if ($branchId) {
+        $ordersQuery->where('branch_id', $branchId);
+    }
 
     // Apply date range filter if fromDate and/or toDate are provided
     if ($fromDate || $toDate) {
