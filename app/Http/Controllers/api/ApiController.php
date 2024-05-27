@@ -187,7 +187,7 @@ class ApiController extends Controller
             $branchId = $user->branch_id;
         }
 
-        // Query orders with filtering by date range and company_id
+        // Query orders with filtering by company_id
         if ($user->user_role == 'admin') {
             $ordersQuery = Orders::with('order_items', 'additional_items')
                 ->where('company_id', $user->company_id);
@@ -201,23 +201,46 @@ class ApiController extends Controller
             $ordersQuery->where('branch_id', $branchId);
         }
 
+        // Helper function to parse order_no to Carbon date
+        function parseOrderNoToDate($orderNo)
+        {
+            $year = substr($orderNo, 0, 2);
+            $month = substr($orderNo, 2, 2);
+            $day = substr($orderNo, 4, 2);
+            $hour = substr($orderNo, 6, 2);
+            $minute = substr($orderNo, 8, 2);
+            $second = substr($orderNo, 10, 2);
+
+            // Assume that the year is in the 2000s
+            $year = '20' . $year;
+
+            return Carbon::create($year, $month, $day, $hour, $minute, $second);
+        }
+
         // Apply date range filter if fromDate and/or toDate are provided
         if ($fromDate || $toDate) {
             if ($fromDate === $toDate) {
                 // If fromDate and toDate are the same, include orders created on that specific date
-                $startTime = Carbon::parse($fromDate)->addHours($closingTime);
-                $endTime = $startTime->copy()->addDay()->subSecond();
-                $ordersQuery->whereBetween('created_at', [$startTime, $endTime]);
+                $startTime = Carbon::parse($fromDate)->startOfDay()->addHours($closingTime);
+                $endTime = Carbon::parse($fromDate)->endOfDay()->addHours($closingTime);
+
+                $startOrderNo = $startTime->format('ymdHis') . '0000';
+                $endOrderNo = $endTime->format('ymdHis') . '9999';
+                $ordersQuery->whereBetween('order_no', [$startOrderNo, $endOrderNo]);
             } else {
                 // If fromDate and toDate are different or only one is provided, adjust based on closingTime
-                $startTime = $fromDate ? Carbon::parse($fromDate)->addHours($closingTime) : null;
-                $endTime = $toDate ? Carbon::parse($toDate)->addHours($closingTime)->addDay()->subSecond() : null;
-                if ($startTime && $endTime) {
-                    $ordersQuery->whereBetween('created_at', [$startTime, $endTime]);
-                } elseif ($startTime) {
-                    $ordersQuery->where('created_at', '>=', $startTime);
-                } elseif ($endTime) {
-                    $ordersQuery->where('created_at', '<=', $endTime);
+                $startTime = $fromDate ? Carbon::parse($fromDate)->startOfDay()->addHours($closingTime) : null;
+                $endTime = $toDate ? Carbon::parse($toDate)->endOfDay()->addHours($closingTime) : null;
+
+                $startOrderNo = $startTime ? $startTime->format('ymdHis') . '0000' : null;
+                $endOrderNo = $endTime ? $endTime->format('ymdHis') . '9999' : null;
+
+                if ($startOrderNo && $endOrderNo) {
+                    $ordersQuery->whereBetween('order_no', [$startOrderNo, $endOrderNo]);
+                } elseif ($startOrderNo) {
+                    $ordersQuery->where('order_no', '>=', $startOrderNo);
+                } elseif ($endOrderNo) {
+                    $ordersQuery->where('order_no', '<=', $endOrderNo);
                 }
             }
         }
@@ -227,28 +250,43 @@ class ApiController extends Controller
             switch ($filterBy) {
                 case 'today':
                     $startTime = Carbon::now()->startOfDay()->addHours($closingTime);
-                    $endTime = $startTime->copy()->addDay()->subSecond();
-                    $ordersQuery->whereBetween('created_at', [$startTime, $endTime]);
+                    $endTime = Carbon::now()->endOfDay()->addHours($closingTime);
+
+                    $startOrderNo = $startTime->format('ymdHis') . '0000';
+                    $endOrderNo = $endTime->format('ymdHis') . '9999';
+                    $ordersQuery->whereBetween('order_no', [$startOrderNo, $endOrderNo]);
                     break;
                 case 'yesterday':
                     $startTime = Carbon::now()->subDay()->startOfDay()->addHours($closingTime);
-                    $endTime = $startTime->copy()->addDay()->subSecond();
-                    $ordersQuery->whereBetween('created_at', [$startTime, $endTime]);
+                    $endTime = Carbon::now()->subDay()->endOfDay()->addHours($closingTime);
+
+                    $startOrderNo = $startTime->format('ymdHis') . '0000';
+                    $endOrderNo = $endTime->format('ymdHis') . '9999';
+                    $ordersQuery->whereBetween('order_no', [$startOrderNo, $endOrderNo]);
                     break;
                 case 'last_three_days':
                     $startTime = Carbon::now()->subDays(3)->startOfDay()->addHours($closingTime);
-                    $endTime = Carbon::now()->startOfDay()->addHours($closingTime)->addDay()->subSecond();
-                    $ordersQuery->whereBetween('created_at', [$startTime, $endTime]);
+                    $endTime = Carbon::now()->endOfDay()->addHours($closingTime);
+
+                    $startOrderNo = $startTime->format('ymdHis') . '0000';
+                    $endOrderNo = $endTime->format('ymdHis') . '9999';
+                    $ordersQuery->whereBetween('order_no', [$startOrderNo, $endOrderNo]);
                     break;
                 case 'last_week':
                     $startTime = Carbon::now()->subWeek()->startOfDay()->addHours($closingTime);
-                    $endTime = Carbon::now()->startOfDay()->addHours($closingTime)->addDay()->subSecond();
-                    $ordersQuery->whereBetween('created_at', [$startTime, $endTime]);
+                    $endTime = Carbon::now()->endOfDay()->addHours($closingTime);
+
+                    $startOrderNo = $startTime->format('ymdHis') . '0000';
+                    $endOrderNo = $endTime->format('ymdHis') . '9999';
+                    $ordersQuery->whereBetween('order_no', [$startOrderNo, $endOrderNo]);
                     break;
                 case 'last_month':
                     $startTime = Carbon::now()->subMonth()->startOfDay()->addHours($closingTime);
-                    $endTime = Carbon::now()->startOfDay()->addHours($closingTime)->addDay()->subSecond();
-                    $ordersQuery->whereBetween('created_at', [$startTime, $endTime]);
+                    $endTime = Carbon::now()->endOfDay()->addHours($closingTime);
+
+                    $startOrderNo = $startTime->format('ymdHis') . '0000';
+                    $endOrderNo = $endTime->format('ymdHis') . '9999';
+                    $ordersQuery->whereBetween('order_no', [$startOrderNo, $endOrderNo]);
                     break;
                 default:
                     // Do nothing for unknown filterBy values
