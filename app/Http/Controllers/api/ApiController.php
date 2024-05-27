@@ -170,212 +170,175 @@ class ApiController extends Controller
 
     // get order
     public function getOrders(Request $request)
-    {
-        $user = Auth::user();
-        $company = Company::where('company_id', $user->company_id)->first();
-        $closingTime = $company->closing_time;
+{
+    $user = Auth::user();
+    $company = Company::where('company_id', $user->company_id)->first();
+    $closingTime = $company->closing_time;
 
-        // Get fromDate, toDate, filterBy, and branch_id from the request
-        $fromDate = $request->input('fromDate');
-        $toDate = $request->input('toDate');
-        $filterBy = $request->input('filterBy');
-        $branchId = $request->input('branch_id');
+    // Get fromDate, toDate, filterBy, and branch_id from the request
+    $fromDate = $request->input('fromDate');
+    $toDate = $request->input('toDate');
+    $filterBy = $request->input('filterBy');
+    $branchId = $request->input('branch_id');
 
-        // Determine the branch_id based on user role
-        if ($user->user_role !== 'admin') {
-            // If user is not admin, use branch_id associated with the user
-            $branchId = $user->branch_id;
-        }
-
-        // Query orders with filtering by company_id
-        if ($user->user_role == 'admin') {
-            $ordersQuery = Orders::with('order_items', 'additional_items')
-                ->where('company_id', $user->company_id);
-        } else {
-            $ordersQuery = Orders::with('order_items', 'additional_items')
-                ->where('company_id', $user->company_id)->where('added_user_id', $user->id);
-        }
-
-        // Apply branch_id filter if provided and not 'all'
-        if ($branchId && $branchId !== 'all') {
-            $ordersQuery->where('branch_id', $branchId);
-        }
-
-        // Helper function to parse order_no to Carbon date
-        function parseOrderNoToDate($orderNo)
-        {
-            $year = substr($orderNo, 0, 2);
-            $month = substr($orderNo, 2, 2);
-            $day = substr($orderNo, 4, 2);
-            $hour = substr($orderNo, 6, 2);
-            $minute = substr($orderNo, 8, 2);
-            $second = substr($orderNo, 10, 2);
-
-            // Assume that the year is in the 2000s
-            $year = '20' . $year;
-
-            return Carbon::create($year, $month, $day, $hour, $minute, $second);
-        }
-
-        // Apply date range filter if fromDate and/or toDate are provided
-        if ($fromDate || $toDate) {
-            if ($fromDate === $toDate) {
-                // If fromDate and toDate are the same, include orders created on that specific date
-                $startTime = Carbon::parse($fromDate)->startOfDay()->addHours($closingTime);
-                $endTime = Carbon::parse($fromDate)->endOfDay()->addHours($closingTime);
-
-                $startOrderNo = $startTime->format('ymdHis') . '0000';
-                $endOrderNo = $endTime->format('ymdHis') . '9999';
-                $ordersQuery->whereBetween('order_no', [$startOrderNo, $endOrderNo]);
-            } else {
-                // If fromDate and toDate are different or only one is provided, adjust based on closingTime
-                $startTime = $fromDate ? Carbon::parse($fromDate)->startOfDay()->addHours($closingTime) : null;
-                $endTime = $toDate ? Carbon::parse($toDate)->endOfDay()->addHours($closingTime) : null;
-
-                $startOrderNo = $startTime ? $startTime->format('ymdHis') . '0000' : null;
-                $endOrderNo = $endTime ? $endTime->format('ymdHis') . '9999' : null;
-
-                if ($startOrderNo && $endOrderNo) {
-                    $ordersQuery->whereBetween('order_no', [$startOrderNo, $endOrderNo]);
-                } elseif ($startOrderNo) {
-                    $ordersQuery->where('order_no', '>=', $startOrderNo);
-                } elseif ($endOrderNo) {
-                    $ordersQuery->where('order_no', '<=', $endOrderNo);
-                }
-            }
-        }
-
-        // Apply additional filters based on filterBy parameter
-        if ($filterBy) {
-            switch ($filterBy) {
-                case 'today':
-                    $startTime = Carbon::now()->startOfDay()->addHours($closingTime);
-                    $endTime = Carbon::now()->endOfDay()->addHours($closingTime);
-
-                    $startOrderNo = $startTime->format('ymdHis') . '0000';
-                    $endOrderNo = $endTime->format('ymdHis') . '9999';
-                    $ordersQuery->whereBetween('order_no', [$startOrderNo, $endOrderNo]);
-                    break;
-                case 'yesterday':
-                    $startTime = Carbon::now()->subDay()->startOfDay()->addHours($closingTime);
-                    $endTime = Carbon::now()->subDay()->endOfDay()->addHours($closingTime);
-
-                    $startOrderNo = $startTime->format('ymdHis') . '0000';
-                    $endOrderNo = $endTime->format('ymdHis') . '9999';
-                    $ordersQuery->whereBetween('order_no', [$startOrderNo, $endOrderNo]);
-                    break;
-                case 'last_three_days':
-                    $startTime = Carbon::now()->subDays(3)->startOfDay()->addHours($closingTime);
-                    $endTime = Carbon::now()->endOfDay()->addHours($closingTime);
-
-                    $startOrderNo = $startTime->format('ymdHis') . '0000';
-                    $endOrderNo = $endTime->format('ymdHis') . '9999';
-                    $ordersQuery->whereBetween('order_no', [$startOrderNo, $endOrderNo]);
-                    break;
-                case 'last_week':
-                    $startTime = Carbon::now()->subWeek()->startOfDay()->addHours($closingTime);
-                    $endTime = Carbon::now()->endOfDay()->addHours($closingTime);
-
-                    $startOrderNo = $startTime->format('ymdHis') . '0000';
-                    $endOrderNo = $endTime->format('ymdHis') . '9999';
-                    $ordersQuery->whereBetween('order_no', [$startOrderNo, $endOrderNo]);
-                    break;
-                case 'last_month':
-                    $startTime = Carbon::now()->subMonth()->startOfDay()->addHours($closingTime);
-                    $endTime = Carbon::now()->endOfDay()->addHours($closingTime);
-
-                    $startOrderNo = $startTime->format('ymdHis') . '0000';
-                    $endOrderNo = $endTime->format('ymdHis') . '9999';
-                    $ordersQuery->whereBetween('order_no', [$startOrderNo, $endOrderNo]);
-                    break;
-                default:
-                    // Do nothing for unknown filterBy values
-                    break;
-            }
-        }
-
-        // Fetch the filtered orders
-        $orders = $ordersQuery->get();
-        $ordersTotal = 0;
-        foreach ($orders as $order) {
-            $ordersTotal += $order->order_final_total;
-        }
-
-        // Map the original response data to a new structure with changed variable names
-        $mappedOrders = $orders->map(function ($order) {
-            $cartItems = array_merge(
-                $order->order_items->map(function ($item) {
-                    $product = Products::find($item->product_id);
-                    $category = null;
-                    $kitchen = null;
-                    if ($product) {
-                        $category = ProductCategory::find($product->category_id);
-                        if ($category) {
-                            // Fetch kitchen details based on kitchen_id from the category
-                            $kitchen = Kitchen::find($category->kitchen_id);
-                        }
-                    }
-                    return [
-                        'qty' => (int)$item->product_qty,
-                        'price' => (int)$item->product_price,
-                        'title' => $product->product_name,
-                        'add_on' => json_decode($item->product_add_ons),
-                        'variations' => json_decode($item->product_variations),
-                        'product_id' => (int)$item->product_id,
-                        'category' => $category ? $category->category_name : null,
-                        'product_variation' => json_decode($item->product_variations),
-                        'kitchen_id' => $kitchen ? (int)$kitchen->kitchen_id : null,
-                        'category_id' => $category ? (int)$category->category_id : null,
-                        'branch_id' => (int)$product->branch_id,
-                        'kitchen_name' => $kitchen ? $kitchen->kitchen_name : null,
-                        'category_name' => $category ? $category->category_name : null,
-                        'product_code' => $product->product_code,
-                        'favourite_item' => (int)$product->favourite_item,
-                        'additional_item' => 0,
-                    ];
-                })->toArray(),
-                $order->additional_items->map(function ($additionalItem) {
-                    return [
-                        'qty' => (int)$additionalItem->product_qty,
-                        'price' => (int)$additionalItem->price,
-                        'title' => $additionalItem->title,
-                        'product_id' => (int)$additionalItem->product_id,
-                        'additional_item' => 1,
-                    ];
-                })->toArray()
-            );
-            return [
-                'info' => [
-                    'phone' => $order->phone,
-                    'customerName' => $order->customer_name,
-                    'assignRider' => $order->assign_rider,
-                    'address' => $order->customer_address,
-                    'table_id' => $order->table_id,
-                    'table_location' => $order->table_location,
-                    'table_no' => $order->table_no,
-                    'table_capacity' => $order->table_capacity,
-                    'branch_id' => $order->branch_id,
-                    'waiter' => $order->waiter_id,
-                    'waiterName' => $order->waiter_name,
-                ],
-                'cartItems' => $cartItems,
-                'type' => $order->order_type,
-                'createdAt' => (int) $order->order_no, // Assuming order_no is a numeric field
-                'subTotal' => (int)$order->order_sub_total,
-                'status' => $order->status,
-                'userId' => (int)$order->added_user_id,
-                'id' => (int)$order->order_id,
-                'grandTotal' => (float)$order->order_grand_total, // Converted to float to maintain decimal points
-                'finalTotal' => (float)$order->order_final_total, // Converted to float to maintain decimal points
-                'discount' => (float)$order->order_discount, // Converted to float to maintain decimal points
-                'change' => (float)$order->order_change, // Converted to float to maintain decimal points
-                'split' => (int)$order->order_split,
-                'isUploaded' => (int)$order->is_uploaded,
-            ];
-        });
-
-        return response()->json(['success' => true, 'ordersTotal' => $ordersTotal, 'data' => $mappedOrders], 200);
+    // Determine the branch_id based on user role
+    if ($user->user_role !== 'admin') {
+        // If user is not admin, use branch_id associated with the user
+        $branchId = $user->branch_id;
     }
+
+    // Query orders with filtering by date range and company_id
+    if ($user->user_role == 'admin') {
+        $ordersQuery = Orders::with('order_items', 'additional_items')
+            ->where('company_id', $user->company_id);
+    } else {
+        $ordersQuery = Orders::with('order_items', 'additional_items')
+            ->where('company_id', $user->company_id)->where('added_user_id', $user->id);
+    }
+
+    // Apply branch_id filter if provided and not 'all'
+    if ($branchId && $branchId !== 'all') {
+        $ordersQuery->where('branch_id', $branchId);
+    }
+
+    // Apply date range filter if fromDate and/or toDate are provided
+    if ($fromDate || $toDate) {
+        if ($fromDate === $toDate) {
+            // If fromDate and toDate are the same, include orders created on that specific date
+            $startTime = Carbon::parse($fromDate)->startOfDay()->timestamp * 1000;
+            $endTime = Carbon::parse($fromDate)->endOfDay()->timestamp * 1000;
+            $ordersQuery->whereBetween('order_no', [$startTime, $endTime]);
+        } else {
+            // If fromDate and toDate are different or only one is provided
+            $startTime = $fromDate ? Carbon::parse($fromDate)->startOfDay()->timestamp * 1000 : null;
+            $endTime = $toDate ? Carbon::parse($toDate)->endOfDay()->timestamp * 1000 : null;
+            if ($startTime && $endTime) {
+                $ordersQuery->whereBetween('order_no', [$startTime, $endTime]);
+            } elseif ($startTime) {
+                $ordersQuery->where('order_no', '>=', $startTime);
+            } elseif ($endTime) {
+                $ordersQuery->where('order_no', '<=', $endTime);
+            }
+        }
+    }
+
+    // Apply additional filters based on filterBy parameter
+    if ($filterBy) {
+        switch ($filterBy) {
+            case 'today':
+                $startTime = Carbon::now()->startOfDay()->timestamp * 1000;
+                $endTime = Carbon::now()->endOfDay()->timestamp * 1000;
+                $ordersQuery->whereBetween('order_no', [$startTime, $endTime]);
+                break;
+            case 'yesterday':
+                $startTime = Carbon::now()->subDay()->startOfDay()->timestamp * 1000;
+                $endTime = Carbon::now()->subDay()->endOfDay()->timestamp * 1000;
+                $ordersQuery->whereBetween('order_no', [$startTime, $endTime]);
+                break;
+            case 'last_three_days':
+                $startTime = Carbon::now()->subDays(3)->startOfDay()->timestamp * 1000;
+                $endTime = Carbon::now()->endOfDay()->timestamp * 1000;
+                $ordersQuery->whereBetween('order_no', [$startTime, $endTime]);
+                break;
+            case 'last_week':
+                $startTime = Carbon::now()->subWeek()->startOfDay()->timestamp * 1000;
+                $endTime = Carbon::now()->endOfDay()->timestamp * 1000;
+                $ordersQuery->whereBetween('order_no', [$startTime, $endTime]);
+                break;
+            case 'last_month':
+                $startTime = Carbon::now()->subMonth()->startOfDay()->timestamp * 1000;
+                $endTime = Carbon::now()->endOfDay()->timestamp * 1000;
+                $ordersQuery->whereBetween('order_no', [$startTime, $endTime]);
+                break;
+            default:
+                // Do nothing for unknown filterBy values
+                break;
+        }
+    }
+
+    // Fetch the filtered orders
+    $orders = $ordersQuery->get();
+    $ordersTotal = 0;
+    foreach ($orders as $order) {
+        $ordersTotal += $order->order_final_total;
+    }
+
+    // Map the original response data to a new structure with changed variable names
+    $mappedOrders = $orders->map(function ($order) {
+        $cartItems = array_merge(
+            $order->order_items->map(function ($item) {
+                $product = Products::find($item->product_id);
+                $category = null;
+                $kitchen = null;
+                if ($product) {
+                    $category = ProductCategory::find($product->category_id);
+                    if ($category) {
+                        // Fetch kitchen details based on kitchen_id from the category
+                        $kitchen = Kitchen::find($category->kitchen_id);
+                    }
+                }
+                return [
+                    'qty' => (int)$item->product_qty,
+                    'price' => (int)$item->product_price,
+                    'title' => $product->product_name,
+                    'add_on' => json_decode($item->product_add_ons),
+                    'variations' => json_decode($item->product_variations),
+                    'product_id' => (int)$item->product_id,
+                    'category' => $category ? $category->category_name : null,
+                    'product_variation' => json_decode($item->product_variations),
+                    'kitchen_id' => $kitchen ? (int)$kitchen->kitchen_id : null,
+                    'category_id' => $category ? (int)$category->category_id : null,
+                    'branch_id' => (int)$product->branch_id,
+                    'kitchen_name' => $kitchen ? $kitchen->kitchen_name : null,
+                    'category_name' => $category ? $category->category_name : null,
+                    'product_code' => $product->product_code,
+                    'favourite_item' => (int)$product->favourite_item,
+                    'additional_item' => 0,
+                ];
+            })->toArray(),
+            $order->additional_items->map(function ($additionalItem) {
+                return [
+                    'qty' => (int)$additionalItem->product_qty,
+                    'price' => (int)$additionalItem->price,
+                    'title' => $additionalItem->title,
+                    'product_id' => (int)$additionalItem->product_id,
+                    'additional_item' => 1,
+                ];
+            })->toArray()
+        );
+        return [
+            'info' => [
+                'phone' => $order->phone,
+                'customerName' => $order->customer_name,
+                'assignRider' => $order->assign_rider,
+                'address' => $order->customer_address,
+                'table_id' => $order->table_id,
+                'table_location' => $order->table_location,
+                'table_no' => $order->table_no,
+                'table_capacity' => $order->table_capacity,
+                'branch_id' => $order->branch_id,
+                'waiter' => $order->waiter_id,
+                'waiterName' => $order->waiter_name,
+            ],
+            'cartItems' => $cartItems,
+            'type' => $order->order_type,
+            'createdAt' => (int) $order->order_no, // Assuming order_no is a numeric field
+            'subTotal' => (int)$order->order_sub_total,
+            'status' => $order->status,
+            'userId' => (int)$order->added_user_id,
+            'id' => (int)$order->order_id,
+            'grandTotal' => (float)$order->order_grand_total, // Converted to float to maintain decimal points
+            'finalTotal' => (float)$order->order_final_total, // Converted to float to maintain decimal points
+            'discount' => (float)$order->order_discount, // Converted to float to maintain decimal points
+            'change' => (float)$order->order_change, // Converted to float to maintain decimal points
+            'split' => (int)$order->order_split,
+            'isUploaded' => (int)$order->is_uploaded,
+        ];
+    });
+
+    return response()->json(['success' => true, 'ordersTotal' => $ordersTotal, 'data' => $mappedOrders], 200);
+}
+
 
 
 
