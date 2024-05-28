@@ -175,19 +175,15 @@ class ApiController extends Controller
     $company = Company::where('company_id', $user->company_id)->first();
     $closingTime = $company->closing_time;
 
-    // Get fromDate, toDate, filterBy, and branch_id from the request
     $fromDate = $request->input('fromDate');
     $toDate = $request->input('toDate');
     $filterBy = $request->input('filterBy');
     $branchId = $request->input('branch_id');
 
-    // Determine the branch_id based on user role
     if ($user->user_role !== 'admin') {
-        // If user is not admin, use branch_id associated with the user
         $branchId = $user->branch_id;
     }
 
-    // Query orders with filtering by date range and company_id
     if ($user->user_role == 'admin') {
         $ordersQuery = Orders::with('order_items', 'additional_items')
             ->where('company_id', $user->company_id);
@@ -196,74 +192,66 @@ class ApiController extends Controller
             ->where('company_id', $user->company_id)->where('added_user_id', $user->id);
     }
 
-    // Apply branch_id filter if provided and not 'all'
     if ($branchId && $branchId !== 'all') {
         $ordersQuery->where('branch_id', $branchId);
     }
 
-    // Apply date range filter if fromDate and/or toDate are provided
     if ($fromDate || $toDate) {
         if ($fromDate === $toDate) {
-            // If fromDate and toDate are the same, include orders created on that specific date
-            $startTime = Carbon::parse($fromDate)->startOfDay()->timestamp * 1000;
-            $endTime = Carbon::parse($fromDate)->endOfDay()->timestamp * 1000;
-            $ordersQuery->whereBetween('order_no', [$startTime, $endTime]);
+            $startTime = Carbon::parse($fromDate)->startOfDay();
+            $endTime = Carbon::parse($fromDate)->endOfDay();
+            $ordersQuery->whereBetween(DB::raw('FROM_UNIXTIME(order_no / 1000)'), [$startTime, $endTime]);
         } else {
-            // If fromDate and toDate are different or only one is provided
-            $startTime = $fromDate ? Carbon::parse($fromDate)->startOfDay()->timestamp * 1000 : null;
-            $endTime = $toDate ? Carbon::parse($toDate)->endOfDay()->timestamp * 1000 : null;
+            $startTime = $fromDate ? Carbon::parse($fromDate)->startOfDay() : null;
+            $endTime = $toDate ? Carbon::parse($toDate)->endOfDay() : null;
             if ($startTime && $endTime) {
-                $ordersQuery->whereBetween('order_no', [$startTime, $endTime]);
+                $ordersQuery->whereBetween(DB::raw('FROM_UNIXTIME(order_no / 1000)'), [$startTime, $endTime]);
             } elseif ($startTime) {
-                $ordersQuery->where('order_no', '>=', $startTime);
+                $ordersQuery->where(DB::raw('FROM_UNIXTIME(order_no / 1000)'), '>=', $startTime);
             } elseif ($endTime) {
-                $ordersQuery->where('order_no', '<=', $endTime);
+                $ordersQuery->where(DB::raw('FROM_UNIXTIME(order_no / 1000)'), '<=', $endTime);
             }
         }
     }
 
-    // Apply additional filters based on filterBy parameter
     if ($filterBy) {
         switch ($filterBy) {
             case 'today':
-                $startTime = Carbon::now()->startOfDay()->timestamp * 1000;
-                $endTime = Carbon::now()->endOfDay()->timestamp * 1000;
-                $ordersQuery->whereBetween('order_no', [$startTime, $endTime]);
+                $startTime = Carbon::now()->startOfDay();
+                $endTime = Carbon::now()->endOfDay();
+                $ordersQuery->whereBetween(DB::raw('FROM_UNIXTIME(order_no / 1000)'), [$startTime, $endTime]);
                 break;
             case 'yesterday':
-                $startTime = Carbon::now()->subDay()->startOfDay()->timestamp * 1000;
-                $endTime = Carbon::now()->subDay()->endOfDay()->timestamp * 1000;
-                $ordersQuery->whereBetween('order_no', [$startTime, $endTime]);
+                $startTime = Carbon::yesterday()->startOfDay();
+                $endTime = Carbon::yesterday()->endOfDay();
+                $ordersQuery->whereBetween(DB::raw('FROM_UNIXTIME(order_no / 1000)'), [$startTime, $endTime]);
                 break;
             case 'last_three_days':
-                $startTime = Carbon::now()->subDays(3)->startOfDay()->timestamp * 1000;
-                $endTime = Carbon::now()->endOfDay()->timestamp * 1000;
-                $ordersQuery->whereBetween('order_no', [$startTime, $endTime]);
+                $startTime = Carbon::now()->subDays(3)->startOfDay();
+                $endTime = Carbon::now()->endOfDay();
+                $ordersQuery->whereBetween(DB::raw('FROM_UNIXTIME(order_no / 1000)'), [$startTime, $endTime]);
                 break;
             case 'last_week':
-                $startTime = Carbon::now()->subWeek()->startOfDay()->timestamp * 1000;
-                $endTime = Carbon::now()->endOfDay()->timestamp * 1000;
-                $ordersQuery->whereBetween('order_no', [$startTime, $endTime]);
+                $startTime = Carbon::now()->subWeek()->startOfDay();
+                $endTime = Carbon::now()->endOfDay();
+                $ordersQuery->whereBetween(DB::raw('FROM_UNIXTIME(order_no / 1000)'), [$startTime, $endTime]);
                 break;
             case 'last_month':
-                $startTime = Carbon::now()->subMonth()->startOfDay()->timestamp * 1000;
-                $endTime = Carbon::now()->endOfDay()->timestamp * 1000;
-                $ordersQuery->whereBetween('order_no', [$startTime, $endTime]);
+                $startTime = Carbon::now()->subMonth()->startOfDay();
+                $endTime = Carbon::now()->endOfDay();
+                $ordersQuery->whereBetween(DB::raw('FROM_UNIXTIME(order_no / 1000)'), [$startTime, $endTime]);
                 break;
             default:
-                // Do nothing for unknown filterBy values
                 break;
         }
     }
 
-    // Fetch the filtered orders
     $orders = $ordersQuery->get();
     $ordersTotal = 0;
     foreach ($orders as $order) {
         $ordersTotal += $order->order_final_total;
     }
 
-    // Map the original response data to a new structure with changed variable names
     $mappedOrders = $orders->map(function ($order) {
         $cartItems = array_merge(
             $order->order_items->map(function ($item) {
@@ -273,7 +261,6 @@ class ApiController extends Controller
                 if ($product) {
                     $category = ProductCategory::find($product->category_id);
                     if ($category) {
-                        // Fetch kitchen details based on kitchen_id from the category
                         $kitchen = Kitchen::find($category->kitchen_id);
                     }
                 }
@@ -306,6 +293,9 @@ class ApiController extends Controller
                 ];
             })->toArray()
         );
+
+        $createdAt = Carbon::createFromTimestampMs($order->order_no)->format('Y-m-d H:i:s');
+
         return [
             'info' => [
                 'phone' => $order->phone,
@@ -322,15 +312,15 @@ class ApiController extends Controller
             ],
             'cartItems' => $cartItems,
             'type' => $order->order_type,
-            'createdAt' => (int) $order->order_no, // Assuming order_no is a numeric field
+            'createdAt' => $order->order_no,
             'subTotal' => (int)$order->order_sub_total,
             'status' => $order->status,
             'userId' => (int)$order->added_user_id,
             'id' => (int)$order->order_id,
-            'grandTotal' => (float)$order->order_grand_total, // Converted to float to maintain decimal points
-            'finalTotal' => (float)$order->order_final_total, // Converted to float to maintain decimal points
-            'discount' => (float)$order->order_discount, // Converted to float to maintain decimal points
-            'change' => (float)$order->order_change, // Converted to float to maintain decimal points
+            'grandTotal' => (float)$order->order_grand_total,
+            'finalTotal' => (float)$order->order_final_total,
+            'discount' => (float)$order->order_discount,
+            'change' => (float)$order->order_change,
             'split' => (int)$order->order_split,
             'isUploaded' => (int)$order->is_uploaded,
         ];
@@ -338,7 +328,6 @@ class ApiController extends Controller
 
     return response()->json(['success' => true, 'ordersTotal' => $ordersTotal, 'data' => $mappedOrders], 200);
 }
-
 
 
 
