@@ -363,7 +363,7 @@ class ApiController extends Controller
                 'cartItems.*.add_on' => 'nullable',
                 'cartItems.*.additional_item' => 'required',
                 'info.customerName' => 'nullable|string',
-                'info.phone' => 'nullable|numeric',
+                'info.phone' => 'nullable',
                 'info.assignRider' => 'nullable|numeric',
                 'info.address' => 'nullable|string',
                 'info.table_id' => 'nullable|numeric',
