@@ -324,6 +324,7 @@ class ApiController extends Controller
                 'split' => (int)$order->order_split,
                 'isUploaded' => (int)$order->is_uploaded,
                 'updatedOrderCartItems' => json_decode($order->updatedOrder),
+                'orderHistory' => $order->order_history,
             ];
         });
 
@@ -377,6 +378,7 @@ class ApiController extends Controller
                 'info.customer_id' => 'nullable|numeric',
                 'credited_amount' => 'nullable',
                 'updatedOrderCartItems' => 'nullable',
+                'orderHistory' => 'nullable',
             ]);
 
             $validatedData['createdAt'] = (string) $validatedData['createdAt'];
@@ -421,6 +423,7 @@ class ApiController extends Controller
                 'status' => $validatedData['status'],
                 'customer_id' => $validatedData['info']['customer_id'],
                 'updatedOrder' => json_encode($validatedData['updatedOrderCartItems']),
+                'order_history' => $validatedData['orderHistory'],
             ]);
 
             foreach ($validatedData['cartItems'] as $cartItem) {
