@@ -325,6 +325,7 @@ class ApiController extends Controller
                 'isUploaded' => (int)$order->is_uploaded,
                 'updatedOrderCartItems' => json_decode($order->updatedOrder),
                 'orderHistory' => $order->order_history,
+                'orderDateTime' => $order->order_date_time,
             ];
         });
 
@@ -379,7 +380,21 @@ class ApiController extends Controller
                 'credited_amount' => 'nullable',
                 'updatedOrderCartItems' => 'nullable',
                 'orderHistory' => 'nullable',
+                'orderDateTime' => 'nullable',
             ]);
+
+            // // Convert createdAt from milliseconds to a DateTime object
+            // $createdAtMilliseconds = $validatedData['createdAt'];
+            // $dateTime = Carbon::createFromTimestamp($createdAtMilliseconds / 1000, 'UTC')->setTimezone('Asia/Karachi');
+            // // Format the date and time in 12-hour format
+            // $formattedOrderDateTime = $dateTime->format('Y-m-d h:i:s');
+            // Convert orderDateTime to a Carbon instance and format it
+            if (!empty($validatedData['orderDateTime'])) {
+                $dateTime = Carbon::parse($validatedData['orderDateTime']);
+                $formattedOrderDateTime = $dateTime->format('Y-m-d H:i:s');
+            } else {
+                $formattedOrderDateTime = null;
+            }
 
             $validatedData['createdAt'] = (string) $validatedData['createdAt'];
 
@@ -387,7 +402,7 @@ class ApiController extends Controller
             if (Orders::where('order_no', $validatedData['createdAt'])->exists()) {
                 return response()->json(['success' => false, 'message' => 'Order number already exists.'], 400);
             }
-            
+
             $orderedUser = User::where('id', $validatedData['userId'])->first();
 
             DB::beginTransaction();
@@ -424,6 +439,7 @@ class ApiController extends Controller
                 'customer_id' => $validatedData['info']['customer_id'],
                 'updatedOrder' => json_encode($validatedData['updatedOrderCartItems']),
                 'order_history' => $validatedData['orderHistory'],
+                'order_date_time' => $formattedOrderDateTime,
             ]);
 
             foreach ($validatedData['cartItems'] as $cartItem) {
