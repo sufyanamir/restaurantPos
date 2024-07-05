@@ -189,7 +189,8 @@ class ApiController extends Controller
                 ->where('company_id', $user->company_id);
         } else {
             $ordersQuery = Orders::with('order_items', 'additional_items')
-                ->where('company_id', $user->company_id)->where('added_user_id', $user->id);
+                ->where('company_id', $user->company_id)
+                ->where('added_user_id', $user->id);
         }
 
         if ($branchId && $branchId !== 'all') {
@@ -200,16 +201,16 @@ class ApiController extends Controller
             if ($fromDate === $toDate) {
                 $startTime = Carbon::parse($fromDate)->startOfDay();
                 $endTime = Carbon::parse($fromDate)->endOfDay();
-                $ordersQuery->whereBetween(DB::raw('FROM_UNIXTIME(order_no / 1000)'), [$startTime, $endTime]);
+                $ordersQuery->whereBetween('order_date_time', [$startTime, $endTime]);
             } else {
                 $startTime = $fromDate ? Carbon::parse($fromDate)->startOfDay() : null;
                 $endTime = $toDate ? Carbon::parse($toDate)->endOfDay() : null;
                 if ($startTime && $endTime) {
-                    $ordersQuery->whereBetween(DB::raw('FROM_UNIXTIME(order_no / 1000)'), [$startTime, $endTime]);
+                    $ordersQuery->whereBetween('order_date_time', [$startTime, $endTime]);
                 } elseif ($startTime) {
-                    $ordersQuery->where(DB::raw('FROM_UNIXTIME(order_no / 1000)'), '>=', $startTime);
+                    $ordersQuery->where('order_date_time', '>=', $startTime);
                 } elseif ($endTime) {
-                    $ordersQuery->where(DB::raw('FROM_UNIXTIME(order_no / 1000)'), '<=', $endTime);
+                    $ordersQuery->where('order_date_time', '<=', $endTime);
                 }
             }
         }
@@ -219,27 +220,27 @@ class ApiController extends Controller
                 case 'today':
                     $startTime = Carbon::now()->startOfDay();
                     $endTime = Carbon::now()->endOfDay();
-                    $ordersQuery->whereBetween(DB::raw('FROM_UNIXTIME(order_no / 1000)'), [$startTime, $endTime]);
+                    $ordersQuery->whereBetween('order_date_time', [$startTime, $endTime]);
                     break;
                 case 'yesterday':
                     $startTime = Carbon::yesterday()->startOfDay();
                     $endTime = Carbon::yesterday()->endOfDay();
-                    $ordersQuery->whereBetween(DB::raw('FROM_UNIXTIME(order_no / 1000)'), [$startTime, $endTime]);
+                    $ordersQuery->whereBetween('order_date_time', [$startTime, $endTime]);
                     break;
                 case 'last_three_days':
                     $startTime = Carbon::now()->subDays(3)->startOfDay();
                     $endTime = Carbon::now()->endOfDay();
-                    $ordersQuery->whereBetween(DB::raw('FROM_UNIXTIME(order_no / 1000)'), [$startTime, $endTime]);
+                    $ordersQuery->whereBetween('order_date_time', [$startTime, $endTime]);
                     break;
                 case 'last_week':
                     $startTime = Carbon::now()->subWeek()->startOfDay();
                     $endTime = Carbon::now()->endOfDay();
-                    $ordersQuery->whereBetween(DB::raw('FROM_UNIXTIME(order_no / 1000)'), [$startTime, $endTime]);
+                    $ordersQuery->whereBetween('order_date_time', [$startTime, $endTime]);
                     break;
                 case 'last_month':
                     $startTime = Carbon::now()->subMonth()->startOfDay();
                     $endTime = Carbon::now()->endOfDay();
-                    $ordersQuery->whereBetween(DB::raw('FROM_UNIXTIME(order_no / 1000)'), [$startTime, $endTime]);
+                    $ordersQuery->whereBetween('order_date_time', [$startTime, $endTime]);
                     break;
                 default:
                     break;
@@ -293,8 +294,6 @@ class ApiController extends Controller
                     ];
                 })->toArray()
             );
-
-            $createdAt = Carbon::createFromTimestampMs($order->order_no)->format('Y-m-d H:i:s');
 
             return [
                 'info' => [
