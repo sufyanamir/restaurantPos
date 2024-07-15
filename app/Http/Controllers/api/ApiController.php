@@ -170,177 +170,177 @@ class ApiController extends Controller
 
     // get order
     public function getOrders(Request $request)
-{
-    $user = Auth::user();
-    $company = Company::where('company_id', $user->company_id)->first();
-    $closingTime = $company->closing_time;
+    {
+        $user = Auth::user();
+        $company = Company::where('company_id', $user->company_id)->first();
+        $closingTime = $company->closing_time;
 
-    $fromDate = $request->input('fromDate');
-    $toDate = $request->input('toDate');
-    $filterBy = $request->input('filterBy');
-    $branchId = $request->input('branch_id');
+        $fromDate = $request->input('fromDate');
+        $toDate = $request->input('toDate');
+        $filterBy = $request->input('filterBy');
+        $branchId = $request->input('branch_id');
 
-    if ($user->user_role !== 'admin') {
-        $branchId = $user->branch_id;
-    }
+        if ($user->user_role !== 'admin') {
+            $branchId = $user->branch_id;
+        }
 
-    if ($user->user_role == 'admin') {
-        $ordersQuery = Orders::with('order_items', 'additional_items')
-            ->where('company_id', $user->company_id);
-    } else {
-        $ordersQuery = Orders::with('order_items', 'additional_items')
-            ->where('company_id', $user->company_id)
-            ->where('added_user_id', $user->id);
-    }
-
-    if ($branchId && $branchId !== 'all') {
-        $ordersQuery->where('branch_id', $branchId);
-    }
-
-    // Adjust dates based on closing time
-    $adjustedStartTime = function($date) use ($closingTime) {
-        return Carbon::parse($date)->subHours($closingTime)->startOfDay()->addHours($closingTime);
-    };
-
-    $adjustedEndTime = function($date) use ($closingTime) {
-        return Carbon::parse($date)->subHours($closingTime)->endOfDay()->addHours($closingTime);
-    };
-
-    if ($fromDate || $toDate) {
-        if ($fromDate === $toDate) {
-            $startTime = $adjustedStartTime($fromDate);
-            $endTime = $adjustedEndTime($toDate);
-            $ordersQuery->whereBetween('order_date_time', [$startTime, $endTime]);
+        if ($user->user_role == 'admin') {
+            $ordersQuery = Orders::with('order_items', 'additional_items')
+                ->where('company_id', $user->company_id);
         } else {
-            $startTime = $fromDate ? $adjustedStartTime($fromDate) : null;
-            $endTime = $toDate ? $adjustedEndTime($toDate) : null;
-            if ($startTime && $endTime) {
+            $ordersQuery = Orders::with('order_items', 'additional_items')
+                ->where('company_id', $user->company_id)
+                ->where('added_user_id', $user->id);
+        }
+
+        if ($branchId && $branchId !== 'all') {
+            $ordersQuery->where('branch_id', $branchId);
+        }
+
+        // Adjust dates based on closing time
+        $adjustedStartTime = function ($date) use ($closingTime) {
+            return Carbon::parse($date)->subHours($closingTime)->startOfDay()->addHours($closingTime);
+        };
+
+        $adjustedEndTime = function ($date) use ($closingTime) {
+            return Carbon::parse($date)->subHours($closingTime)->endOfDay()->addHours($closingTime);
+        };
+
+        if ($fromDate || $toDate) {
+            if ($fromDate === $toDate) {
+                $startTime = $adjustedStartTime($fromDate);
+                $endTime = $adjustedEndTime($toDate);
                 $ordersQuery->whereBetween('order_date_time', [$startTime, $endTime]);
-            } elseif ($startTime) {
-                $ordersQuery->where('order_date_time', '>=', $startTime);
-            } elseif ($endTime) {
-                $ordersQuery->where('order_date_time', '<=', $endTime);
+            } else {
+                $startTime = $fromDate ? $adjustedStartTime($fromDate) : null;
+                $endTime = $toDate ? $adjustedEndTime($toDate) : null;
+                if ($startTime && $endTime) {
+                    $ordersQuery->whereBetween('order_date_time', [$startTime, $endTime]);
+                } elseif ($startTime) {
+                    $ordersQuery->where('order_date_time', '>=', $startTime);
+                } elseif ($endTime) {
+                    $ordersQuery->where('order_date_time', '<=', $endTime);
+                }
             }
         }
-    }
 
-    if ($filterBy) {
-        $now = Carbon::now();
-        switch ($filterBy) {
-            case 'today':
-                $startTime = $adjustedStartTime($now);
-                $endTime = $adjustedEndTime($now);
-                break;
-            case 'yesterday':
-                $startTime = $adjustedStartTime($now->subDay());
-                $endTime = $adjustedEndTime($now);
-                break;
-            case 'last_three_days':
-                $startTime = $adjustedStartTime($now->subDays(3));
-                $endTime = $adjustedEndTime($now);
-                break;
-            case 'last_week':
-                $startTime = $adjustedStartTime($now->subWeek());
-                $endTime = $adjustedEndTime($now);
-                break;
-            case 'last_month':
-                $startTime = $adjustedStartTime($now->subMonth());
-                $endTime = $adjustedEndTime($now);
-                break;
-            default:
-                $startTime = null;
-                $endTime = null;
-                break;
+        if ($filterBy) {
+            $now = Carbon::now();
+            switch ($filterBy) {
+                case 'today':
+                    $startTime = $adjustedStartTime($now);
+                    $endTime = $adjustedEndTime($now);
+                    break;
+                case 'yesterday':
+                    $startTime = $adjustedStartTime($now->subDay());
+                    $endTime = $adjustedEndTime($now);
+                    break;
+                case 'last_three_days':
+                    $startTime = $adjustedStartTime($now->subDays(3));
+                    $endTime = $adjustedEndTime($now);
+                    break;
+                case 'last_week':
+                    $startTime = $adjustedStartTime($now->subWeek());
+                    $endTime = $adjustedEndTime($now);
+                    break;
+                case 'last_month':
+                    $startTime = $adjustedStartTime($now->subMonth());
+                    $endTime = $adjustedEndTime($now);
+                    break;
+                default:
+                    $startTime = null;
+                    $endTime = null;
+                    break;
+            }
+
+            if ($startTime && $endTime) {
+                $ordersQuery->whereBetween('order_date_time', [$startTime, $endTime]);
+            }
         }
 
-        if ($startTime && $endTime) {
-            $ordersQuery->whereBetween('order_date_time', [$startTime, $endTime]);
+        $orders = $ordersQuery->get();
+        $ordersTotal = 0;
+        foreach ($orders as $order) {
+            $ordersTotal += $order->order_final_total;
         }
-    }
 
-    $orders = $ordersQuery->get();
-    $ordersTotal = 0;
-    foreach ($orders as $order) {
-        $ordersTotal += $order->order_final_total;
-    }
-
-    $mappedOrders = $orders->map(function ($order) {
-        $cartItems = array_merge(
-            $order->order_items->map(function ($item) {
-                $product = Products::find($item->product_id);
-                $category = null;
-                $kitchen = null;
-                if ($product) {
-                    $category = ProductCategory::find($product->category_id);
-                    if ($category) {
-                        $kitchen = Kitchen::find($category->kitchen_id);
+        $mappedOrders = $orders->map(function ($order) {
+            $cartItems = array_merge(
+                $order->order_items->map(function ($item) {
+                    $product = Products::find($item->product_id);
+                    $category = null;
+                    $kitchen = null;
+                    if ($product) {
+                        $category = ProductCategory::find($product->category_id);
+                        if ($category) {
+                            $kitchen = Kitchen::find($category->kitchen_id);
+                        }
                     }
-                }
-                return [
-                    'qty' => (int)$item->product_qty,
-                    'price' => (int)$item->product_price,
-                    'title' => $product->product_name,
-                    'add_on' => json_decode($item->product_add_ons),
-                    'variations' => json_decode($item->product_variations),
-                    'product_id' => (int)$item->product_id,
-                    'category' => $category ? $category->category_name : null,
-                    'product_variation' => json_decode($item->product_variations),
-                    'kitchen_id' => $kitchen ? (int)$kitchen->kitchen_id : null,
-                    'category_id' => $category ? (int)$category->category_id : null,
-                    'branch_id' => (int)$product->branch_id,
-                    'kitchen_name' => $kitchen ? $kitchen->kitchen_name : null,
-                    'category_name' => $category ? $category->category_name : null,
-                    'product_code' => $product->product_code,
-                    'favourite_item' => (int)$product->favourite_item,
-                    'additional_item' => 0,
-                ];
-            })->toArray(),
-            $order->additional_items->map(function ($additionalItem) {
-                return [
-                    'qty' => (int)$additionalItem->product_qty,
-                    'price' => (int)$additionalItem->price,
-                    'title' => $additionalItem->title,
-                    'product_id' => (int)$additionalItem->product_id,
-                    'additional_item' => 1,
-                ];
-            })->toArray()
-        );
+                    return [
+                        'qty' => (int)$item->product_qty,
+                        'price' => (int)$item->product_price,
+                        'title' => $product->product_name,
+                        'add_on' => json_decode($item->product_add_ons),
+                        'variations' => json_decode($item->product_variations),
+                        'product_id' => (int)$item->product_id,
+                        'category' => $category ? $category->category_name : null,
+                        'product_variation' => json_decode($item->product_variations),
+                        'kitchen_id' => $kitchen ? (int)$kitchen->kitchen_id : null,
+                        'category_id' => $category ? (int)$category->category_id : null,
+                        'branch_id' => (int)$product->branch_id,
+                        'kitchen_name' => $kitchen ? $kitchen->kitchen_name : null,
+                        'category_name' => $category ? $category->category_name : null,
+                        'product_code' => $product->product_code,
+                        'favourite_item' => (int)$product->favourite_item,
+                        'additional_item' => 0,
+                    ];
+                })->toArray(),
+                $order->additional_items->map(function ($additionalItem) {
+                    return [
+                        'qty' => (int)$additionalItem->product_qty,
+                        'price' => (int)$additionalItem->price,
+                        'title' => $additionalItem->title,
+                        'product_id' => (int)$additionalItem->product_id,
+                        'additional_item' => 1,
+                    ];
+                })->toArray()
+            );
 
-        return [
-            'info' => [
-                'phone' => $order->phone,
-                'customerName' => $order->customer_name,
-                'assignRider' => $order->assign_rider,
-                'address' => $order->customer_address,
-                'table_id' => $order->table_id,
-                'table_location' => $order->table_location,
-                'table_no' => $order->table_no,
-                'table_capacity' => $order->table_capacity,
-                'branch_id' => $order->branch_id,
-                'waiter' => $order->waiter_id,
-                'waiterName' => $order->waiter_name,
-            ],
-            'cartItems' => $cartItems,
-            'type' => $order->order_type,
-            'createdAt' => $order->order_no,
-            'subTotal' => (int)$order->order_sub_total,
-            'status' => $order->status,
-            'userId' => (int)$order->added_user_id,
-            'id' => (int)$order->order_id,
-            'grandTotal' => (float)$order->order_grand_total,
-            'finalTotal' => (float)$order->order_final_total,
-            'discount' => (float)$order->order_discount,
-            'change' => (float)$order->order_change,
-            'split' => (int)$order->order_split,
-            'isUploaded' => (int)$order->is_uploaded,
-            'updatedOrderCartItems' => json_decode($order->updatedOrder),
-            'orderHistory' => $order->order_history,
-            'orderDateTime' => $order->order_date_time,
-        ];
-    });
+            return [
+                'info' => [
+                    'phone' => $order->phone,
+                    'customerName' => $order->customer_name,
+                    'assignRider' => $order->assign_rider,
+                    'address' => $order->customer_address,
+                    'table_id' => $order->table_id,
+                    'table_location' => $order->table_location,
+                    'table_no' => $order->table_no,
+                    'table_capacity' => $order->table_capacity,
+                    'branch_id' => $order->branch_id,
+                    'waiter' => $order->waiter_id,
+                    'waiterName' => $order->waiter_name,
+                ],
+                'cartItems' => $cartItems,
+                'type' => $order->order_type,
+                'createdAt' => $order->order_no,
+                'subTotal' => (int)$order->order_sub_total,
+                'status' => $order->status,
+                'userId' => (int)$order->added_user_id,
+                'id' => (int)$order->order_id,
+                'grandTotal' => (float)$order->order_grand_total,
+                'finalTotal' => (float)$order->order_final_total,
+                'discount' => (float)$order->order_discount,
+                'change' => (float)$order->order_change,
+                'split' => (int)$order->order_split,
+                'isUploaded' => (int)$order->is_uploaded,
+                'updatedOrderCartItems' => json_decode($order->updatedOrder),
+                'orderHistory' => $order->order_history,
+                'orderDateTime' => $order->order_date_time,
+            ];
+        });
 
-    return response()->json(['success' => true, 'ordersTotal' => $ordersTotal, 'data' => $mappedOrders], 200);
-}
+        return response()->json(['success' => true, 'ordersTotal' => $ordersTotal, 'data' => $mappedOrders], 200);
+    }
 
 
 
