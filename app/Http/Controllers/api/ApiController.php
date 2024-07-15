@@ -180,7 +180,7 @@ class ApiController extends Controller
         $filterBy = $request->input('filterBy');
         $branchId = $request->input('branch_id');
 
-        if ($user->user_role !== 'admin') {
+        if ($user->user_role != 'admin') {
             $branchId = $user->branch_id;
         }
 
@@ -193,7 +193,7 @@ class ApiController extends Controller
                 ->where('added_user_id', $user->id);
         }
 
-        if ($branchId && $branchId !== 'all') {
+        if ($branchId && $branchId != 'all') {
             $ordersQuery->where('branch_id', $branchId);
         }
 
