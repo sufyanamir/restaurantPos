@@ -970,7 +970,7 @@ class ApiController extends Controller
         $user = Auth::user();
 
         try {
-            if($user->user_role == 'admin')
+            if($user->user_role != 'admin')
             {
                 $products = Products::with(['variations', 'add_ons'])
                 ->where('company_id', $user->company_id)
