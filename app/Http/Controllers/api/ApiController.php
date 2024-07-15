@@ -970,10 +970,19 @@ class ApiController extends Controller
         $user = Auth::user();
 
         try {
-            $products = Products::with(['variations', 'add_ons'])
+            if($user->user_role == 'admin')
+            {
+                $products = Products::with(['variations', 'add_ons'])
+                ->where('company_id', $user->company_id)
+                ->where('branch_id', $user->user_branch)
+                ->orderBy('product_id', 'desc')
+                ->get();
+            }else{
+                $products = Products::with(['variations', 'add_ons'])
                 ->where('company_id', $user->company_id)
                 ->orderBy('product_id', 'desc')
                 ->get();
+            }
 
             if ($products->count() > 0) {
                 $formattedProducts = $products->map(function ($product) {
