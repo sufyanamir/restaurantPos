@@ -14,6 +14,11 @@ class Voucher extends Model
         return $this->belongsTo(Customers::class, 'customer_id');
     }
 
+    public function transactions()
+    {
+        return $this->hasMany(Trasanctions::class, 'transaction_id');
+    }
+
     protected $table = 'vouchers';
 
     protected $primaryKey = 'voucher_id';
