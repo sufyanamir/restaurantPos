@@ -80,7 +80,7 @@ class ApiController extends Controller
 
             $responseData = $vouchers->map(function ($voucher) {
                 return [
-                    'date' => $voucher->voucher_date,
+                    'date' => date('y-m-d', strtotime($voucher->voucher_date)),
                     'customer_id' => $voucher->customer_id,
                     'voucher_id' => $voucher->voucher_id,
                     'customer_name' => $voucher->customers->customer_name,
@@ -166,7 +166,7 @@ class ApiController extends Controller
 
             $responseData[] = [
                 'customer_id' => $voucher->customer_id,
-                'date' => $voucher->voucher_date,
+                'date' => date('y-m-d', strtotime($voucher->voucher_date)),
                 'credit' => $voucher->credit,
                 'debit' => $voucher->debit,
                 'note' => $voucher->transaction_remarks,
@@ -220,7 +220,7 @@ class ApiController extends Controller
 
             $responseData[] = [
                 'customer_id' => $voucher->customer_id,
-                'date' => $voucher->voucher_date,
+                'date' => date('y-m-d', strtotime($voucher->voucher_date)),
                 'credit' => $voucher->credit,
                 'debit' => $voucher->debit,
                 'note' => $voucher->transaction_remarks,
