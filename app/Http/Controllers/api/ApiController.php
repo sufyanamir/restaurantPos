@@ -310,6 +310,7 @@ class ApiController extends Controller
             $voucher->voucher_date = $validatedData['date'];
             $voucher->credit = $validatedData['credit'];
             $voucher->debit = $validatedData['debit'];
+            $voucher->transaction_id = $transaction->transaction_id;
             $voucher->transaction_remarks = $validatedData['note'];
 
             $voucher->save();
