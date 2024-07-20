@@ -187,14 +187,14 @@ class ApiController extends Controller
         }
     }
     // create order from mobile app
-    
+
     // get transactions
     public function ledger($id)
     {
 
         try {
             $user = Auth::user();
-             
+
             $customer = Customers::with('transactions')->where('customer_id', $id)->first();
 
             if (!$customer) {
@@ -202,13 +202,9 @@ class ApiController extends Controller
             }
 
             return response()->json(['success' => true, 'data' => $customer], 200);
-
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
-
-
-        
     }
     // get transactions
 
@@ -216,7 +212,7 @@ class ApiController extends Controller
     public function getVouchers()
     {
         try {
-            
+
             $user = Auth::user();
 
             $vouchers = Voucher::with('customers')->where('added_user_id', $user->id)->get();
@@ -236,9 +232,8 @@ class ApiController extends Controller
                     'note' => $voucher->note,
                 ];
             });
-            
-            return response()->json(['success' => true, 'vouchers' => $responseData], 200);
 
+            return response()->json(['success' => true, 'vouchers' => $responseData], 200);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
@@ -253,16 +248,20 @@ class ApiController extends Controller
                 'voucher_id' => 'required',
             ]);
 
-            $voucher = Voucher::where('voucher_id', $validatedData['voucher_id'])->first();
+            $voucher = Voucher::with('transactions')->where('voucher_id', $validatedData['voucher_id'])->first();
 
             if (!$voucher) {
                 return response()->json(['success' => false, 'message' => 'Voucher not found'], 404);
             }
 
+            // Delete all related transactions
+            foreach ($voucher->transactions as $transaction) {
+                $transaction->delete();
+            }
+
             $voucher->delete();
 
             return response()->json(['success' => true, 'message' => 'Voucher deleted', 'deleted_voucher' => $voucher->voucher_id], 200);
-
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
@@ -287,13 +286,16 @@ class ApiController extends Controller
 
             $customer = Customers::where('customer_id', $validatedData['customer_id'])->first();
             $voucher = Voucher::where('voucher_id', $validatedData['voucher_id'])->first();
+            $existingTransaction = Trasanctions::where('transaction_id', $voucher->transaction_id)->first();
 
-            
+
             if (!$voucher) {
                 return response()->json(['success' => false, 'message' => 'Voucher not found'], 404);
-            }elseif (!$customer) {
+            } elseif (!$customer) {
                 return response()->json(['success' => false, 'message' => 'Customer not found'], 404);
             }
+
+            $existingTransaction->delete();
 
             $transaction = Trasanctions::create([
                 'company_id' => $customer->company_id,
@@ -321,7 +323,6 @@ class ApiController extends Controller
             ];
 
             return response()->json(['success' => true, 'message' => 'Voucher updated successfully', 'updated_voucher' => $responseData], 200);
-
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
@@ -367,6 +368,7 @@ class ApiController extends Controller
             ]);
 
             $responseData[] = [
+                'voucher_id' => $voucher->voucher_id,
                 'customer_id' => $voucher->customer_id,
                 'date' => date('y-m-d', strtotime($voucher->voucher_date)),
                 'credit' => $voucher->credit,
@@ -375,7 +377,6 @@ class ApiController extends Controller
             ];
 
             return response()->json(['success' => true, 'message' => 'Voucher added successfully', 'added_voucher' => $responseData], 200);
-
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
@@ -1312,18 +1313,17 @@ class ApiController extends Controller
         $user = Auth::user();
 
         try {
-            if($user->user_role != 'admin')
-            {
+            if ($user->user_role != 'admin') {
                 $products = Products::with(['variations', 'add_ons'])
-                ->where('company_id', $user->company_id)
-                ->where('branch_id', $user->user_branch)
-                ->orderBy('product_id', 'desc')
-                ->get();
-            }else{
+                    ->where('company_id', $user->company_id)
+                    ->where('branch_id', $user->user_branch)
+                    ->orderBy('product_id', 'desc')
+                    ->get();
+            } else {
                 $products = Products::with(['variations', 'add_ons'])
-                ->where('company_id', $user->company_id)
-                ->orderBy('product_id', 'desc')
-                ->get();
+                    ->where('company_id', $user->company_id)
+                    ->orderBy('product_id', 'desc')
+                    ->get();
             }
 
             if ($products->count() > 0) {
