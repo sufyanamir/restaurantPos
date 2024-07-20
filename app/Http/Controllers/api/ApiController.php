@@ -45,11 +45,144 @@ class ApiController extends Controller
     public function createOrderFromApp(Request $request)
     {
         try {
-            
             $user = Auth::user();
 
+            $validatedData = $request->validate([
+                'userId' => 'required|numeric',
+                'id' => 'required|numeric',
+                'createdAt' => 'required',
+                'type' => 'required|string',
+                'split' => 'nullable|numeric',
+                'splittedAmount' => 'nullable|numeric',
+                'subTotal' => 'required|numeric',
+                'discount' => 'required|numeric',
+                'saleTax' => 'nullable|numeric',
+                'serviceCharges' => 'nullable|numeric',
+                'change' => 'required|numeric',
+                'status' => 'required|string',
+                'finalTotal' => 'required|numeric',
+                'grandTotal' => 'required|numeric',
+                'cartItems' => 'required|array',
+                'cartItems.*.product_id' => 'required',
+                'cartItems.*.qty' => 'required|numeric',
+                'cartItems.*.price' => 'required|numeric',
+                'cartItems.*.product_variation' => 'nullable',
+                'cartItems.*.title' => 'nullable',
+                'cartItems.*.add_on' => 'nullable',
+                'cartItems.*.additional_item' => 'required',
+                'info.customerName' => 'nullable|string',
+                'info.phone' => 'nullable',
+                'info.assignRider' => 'nullable|numeric',
+                'info.address' => 'nullable|string',
+                'info.table_id' => 'nullable|numeric',
+                'info.waiter' => 'nullable|numeric',
+                'info.waiterName' => 'nullable|string',
+                'info.table_location' => 'nullable|string',
+                'info.table_no' => 'nullable|numeric',
+                'info.table_capacity' => 'nullable|numeric',
+                'info.branch_id' => 'nullable|numeric',
+                'info.customer_id' => 'nullable|numeric',
+                'credited_amount' => 'nullable',
+                'updatedOrderCartItems' => 'nullable',
+                'orderHistory' => 'nullable',
+                'orderDateTime' => 'nullable',
+            ]);
 
+            // // Convert createdAt from milliseconds to a DateTime object
+            // $createdAtMilliseconds = $validatedData['createdAt'];
+            // $dateTime = Carbon::createFromTimestamp($createdAtMilliseconds / 1000, 'UTC')->setTimezone('Asia/Karachi');
+            // // Format the date and time in 12-hour format
+            // $formattedOrderDateTime = $dateTime->format('Y-m-d h:i:s');
+            // Convert orderDateTime to a Carbon instance and format it
+            if (!empty($validatedData['orderDateTime'])) {
+                $dateTime = Carbon::parse($validatedData['orderDateTime']);
+                $formattedOrderDateTime = $dateTime->format('Y-m-d H:i:s');
+            } else {
+                $formattedOrderDateTime = null;
+            }
+
+            $validatedData['createdAt'] = (string) $validatedData['createdAt'];
+
+            // Check if order_no (createdAt) already exists in the database
+            if (Orders::where('order_no', $validatedData['createdAt'])->exists()) {
+                return response()->json(['success' => false, 'message' => 'Order number already exists.'], 400);
+            }
+
+            $orderedUser = User::where('id', $validatedData['userId'])->first();
+
+            DB::beginTransaction();
+
+            $order = Orders::create([
+                'added_user_id' => $validatedData['userId'],
+                'order_id' => $validatedData['id'],
+                'order_no' => $validatedData['createdAt'],
+                'order_type' => $validatedData['type'],
+                'order_sub_total' => $validatedData['subTotal'],
+                'order_discount' => $validatedData['discount'],
+                'order_grand_total' => $validatedData['grandTotal'],
+                'order_final_total' => $validatedData['finalTotal'],
+                'order_sale_tax' => $validatedData['saleTax'],
+                'service_charges' => $validatedData['serviceCharges'],
+                'order_change' => $validatedData['change'],
+                'order_split' => $validatedData['split'],
+                'order_split_amount' => $validatedData['splittedAmount'],
+                'is_uploaded' => 1,
+                'customer_name' => $validatedData['info']['customerName'],
+                'phone' => $validatedData['info']['phone'],
+                'assign_rider' => $validatedData['info']['assignRider'],
+                'customer_address' => $validatedData['info']['address'],
+                'table_id' => $validatedData['info']['table_id'],
+                'table_location' => $validatedData['info']['table_location'],
+                'table_no' => $validatedData['info']['table_no'],
+                'table_capacity' => $validatedData['info']['table_capacity'],
+                'branch_id' => $validatedData['info']['branch_id'],
+                'waiter_id' => $validatedData['info']['waiter'],
+                'waiter_name' => $validatedData['info']['waiterName'],
+                'company_id' => $user->company_id,
+                'user_branch_id' => $user->user_branch,
+                'status' => $validatedData['status'],
+                'customer_id' => $validatedData['info']['customer_id'],
+                'updatedOrder' => json_encode($validatedData['updatedOrderCartItems']),
+                'order_history' => $validatedData['orderHistory'],
+                'order_date_time' => $formattedOrderDateTime,
+            ]);
+
+            foreach ($validatedData['cartItems'] as $cartItem) {
+                if ($cartItem['additional_item'] == 1) {
+                    OrderAdditionalItems::create([
+                        'order_main_id' => $order->order_main_id,
+                        'product_id' => $cartItem['product_id'],
+                        'title' => $cartItem['title'],
+                        'price' => $cartItem['price'],
+                        'product_qty' => $cartItem['qty'],
+                    ]);
+                } else {
+                    OrderItems::create([
+                        'order_main_id' => $order->order_main_id,
+                        'product_id' => $cartItem['product_id'],
+                        'product_qty' => $cartItem['qty'],
+                        'product_price' => $cartItem['price'],
+                        'product_variations' => json_encode($cartItem['product_variation']),
+                        'product_add_ons' => json_encode($cartItem['add_on']),
+                    ]);
+                }
+            }
+            if ($validatedData['credited_amount'] != null) {
+                $transaction = Trasanctions::create([
+                    'company_id' => $user->company_id,
+                    'branch_id' => $user->user_branch,
+                    'added_user_id' => $user->id,
+                    'order_id' => $order->order_id,
+                    'credit_amount' => $validatedData['credited_amount'],
+                    'customer_id' => $validatedData['info']['customer_id'],
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json(['success' => true, 'message' => 'Order Created!', 'createdAt' => (int) $order->order_no, 'isUploaded' => $order->is_uploaded, 'status' => $order->status], 200);
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
     }
