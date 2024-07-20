@@ -41,6 +41,10 @@ class ApiController extends Controller
     protected $appUrl = 'https://adminpos.thewebconcept.com/';
 
     //----------------------------------------------------kitchen screen APIs------------------------------------------------------//
+    // create order from mobile app
+
+    // create order from mobile app
+    
     // get transactions
     public function ledger($id)
     {
@@ -166,6 +170,7 @@ class ApiController extends Controller
 
             $responseData[] = [
                 'customer_id' => $voucher->customer_id,
+                'voucher_id' => $voucher->voucher_id,
                 'date' => date('y-m-d', strtotime($voucher->voucher_date)),
                 'credit' => $voucher->credit,
                 'debit' => $voucher->debit,
