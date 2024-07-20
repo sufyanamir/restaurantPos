@@ -78,14 +78,16 @@ class ApiController extends Controller
                 return response()->json(['success' => false, 'message' => 'Vouchers not found'], 404);
             }
 
-            $responseData = [
-                'date' => $vouchers->voucher_date,
-                'customer_id' => $vouchers->customer_id,
-                'customer_name' => $vouchers->customers->customer_name,
-                'credit' => $vouchers->credit,
-                'debit' => $vouchers->debit,
-                'note' => $vouchers->note,
-            ];
+            $responseData = $vouchers->map(function ($voucher) {
+                return [
+                    'date' => $voucher->voucher_date,
+                    'customer_id' => $voucher->customer_id,
+                    'customer_name' => $voucher->customers->customer_name,
+                    'credit' => $voucher->credit,
+                    'debit' => $voucher->debit,
+                    'note' => $voucher->note,
+                ];
+            });
             
             return response()->json(['success' => true, 'vouchers' => $responseData], 200);
 
