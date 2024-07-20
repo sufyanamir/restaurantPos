@@ -82,7 +82,7 @@ class ApiController extends Controller
                 return [
                     'date' => $voucher->voucher_date,
                     'customer_id' => $voucher->customer_id,
-                    'voucher' => $voucher->voucher_id,
+                    'voucher_id' => $voucher->voucher_id,
                     'customer_name' => $voucher->customers->customer_name,
                     'credit' => $voucher->credit,
                     'debit' => $voucher->debit,
