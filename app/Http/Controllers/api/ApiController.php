@@ -294,8 +294,9 @@ class ApiController extends Controller
             } elseif (!$customer) {
                 return response()->json(['success' => false, 'message' => 'Customer not found'], 404);
             }
-
-            $existingTransaction->delete();
+            if ($existingTransaction) {
+                $existingTransaction->delete();
+            }
 
             $transaction = Trasanctions::create([
                 'company_id' => $customer->company_id,
