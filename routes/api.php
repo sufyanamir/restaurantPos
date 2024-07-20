@@ -115,6 +115,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/adminDashboard', [ApiController::class, 'adminDashboard']);
 
     Route::post('/user/update', [ApiController::class, 'updateUserDetail']);
+
+    Route::get('/ledger/{id}', [ApiController::class, 'ledger']);
+
+    Route::get('/getVouchers', [ApiController::class, 'getVouchers']);
+    Route::post('/deleteVoucher', [ApiController::class, 'deleteVoucher']);
+    Route::post('/updateVoucher', [ApiController::class, 'updateVoucher']);
+    Route::post('/addVoucher', [ApiController::class, 'addVoucher']);
+
 });
 
 Route::middleware('auth:sanctum')->post('/logout', [ApiController::class, 'logout']);

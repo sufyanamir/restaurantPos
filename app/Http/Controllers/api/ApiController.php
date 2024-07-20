@@ -31,6 +31,7 @@ use App\Models\ProductCategory;
 use App\Models\Products;
 use App\Models\RestaurantTables;
 use App\Models\Trasanctions;
+use App\Models\Voucher;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rules\Unique;
@@ -40,6 +41,196 @@ class ApiController extends Controller
     protected $appUrl = 'https://adminpos.thewebconcept.com/';
 
     //----------------------------------------------------kitchen screen APIs------------------------------------------------------//
+    // get transactions
+    public function ledger($id)
+    {
+
+        try {
+            $user = Auth::user();
+             
+            $customer = Customers::with('transactions')->where('customer_id', $id)->first();
+
+            if (!$customer) {
+                return response()->json(['success' => false, 'message' => 'Customer not found'], 404);
+            }
+
+            return response()->json(['success' => true, 'data' => $customer], 200);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+
+
+        
+    }
+    // get transactions
+
+    // get voucher
+    public function getVouchers()
+    {
+        try {
+            
+            $user = Auth::user();
+
+            $vouchers = Voucher::with('customers')->where('added_user_id', $user->id)->get();
+
+            if (!$vouchers) {
+                return response()->json(['success' => false, 'message' => 'Vouchers not found'], 404);
+            }
+
+            $responseData = [
+                'date' => $vouchers->voucher_date,
+                'customer_id' => $vouchers->customer_id,
+                'customer_name' => $vouchers->customers->customer_name,
+                'credit' => $vouchers->credit,
+                'debit' => $vouchers->debit,
+                'note' => $vouchers->note,
+            ];
+            
+            return response()->json(['success' => true, 'vouchers' => $responseData], 200);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+    // get voucher
+
+    // delete voucher
+    public function deleteVoucher(Request $request)
+    {
+        try {
+            $validatedData = $request->validate([
+                'voucher_id' => 'required',
+            ]);
+
+            $voucher = Voucher::where('voucher_id', $validatedData['voucher_id'])->first();
+
+            if (!$voucher) {
+                return response()->json(['success' => false, 'message' => 'Voucher not found'], 404);
+            }
+
+            $voucher->delete();
+
+            return response()->json(['success' => true, 'message' => 'Voucher deleted'], 200);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+    // delete voucher
+
+    // update voucher
+    public function updateVoucher(Request $request)
+    {
+        try {
+
+            $user = Auth::user();
+
+            $validatedData = $request->validate([
+                'voucher_id' => 'required',
+                'customer_id' => 'required',
+                'date' => 'nullable',
+                'credit' => 'nullable',
+                'debit' => 'nullable',
+                'note' => 'nullable',
+            ]);
+
+            $customer = Customers::where('customer_id', $validatedData['customer_id'])->first();
+            $voucher = Voucher::where('voucher_id', $validatedData['voucher_id'])->first();
+
+            
+            if (!$voucher) {
+                return response()->json(['success' => false, 'message' => 'Voucher not found'], 404);
+            }elseif (!$customer) {
+                return response()->json(['success' => false, 'message' => 'Customer not found'], 404);
+            }
+
+            $transaction = Trasanctions::create([
+                'company_id' => $customer->company_id,
+                'branch_id' => $customer->branch_id,
+                'added_user_id' => $user->id,
+                'customer_id' => $customer->customer_id,
+                'debit_amount' => $validatedData['debit'],
+                'credit_amount' => $validatedData['credit'],
+            ]);
+
+            $voucher->voucher_date = $validatedData['date'];
+            $voucher->credit = $validatedData['credit'];
+            $voucher->debit = $validatedData['debit'];
+            $voucher->transaction_remarks = $validatedData['note'];
+
+            $voucher->save();
+
+            $responseData[] = [
+                'customer_id' => $voucher->customer_id,
+                'date' => $voucher->voucher_date,
+                'credit' => $voucher->credit,
+                'debit' => $voucher->debit,
+                'note' => $voucher->transaction_remarks,
+            ];
+
+            return response()->json(['success' => true, 'message' => 'Voucher updated successfully', 'updated_voucher' => $responseData], 200);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+    // update voucher
+
+    // add voucher
+    public function addVoucher(Request $request)
+    {
+        try {
+
+            $user = Auth::user();
+
+            $validatedData = $request->validate([
+                'date' => 'required',
+                'customer_id' => 'required',
+                'credit' => 'nullable',
+                'debit' => 'nullable',
+                'note' => 'nullable',
+            ]);
+
+            $customer = Customers::where('customer_id', $validatedData['customer_id'])->first();
+
+            $transaction = Trasanctions::create([
+                'company_id' => $customer->company_id,
+                'branch_id' => $customer->branch_id,
+                'added_user_id' => $user->id,
+                'customer_id' => $customer->customer_id,
+                'debit_amount' => $validatedData['debit'],
+                'credit_amount' => $validatedData['credit'],
+            ]);
+
+            $voucher = Voucher::create([
+                'voucher_date' => $validatedData['date'],
+                'credit' => $validatedData['credit'],
+                'debit' => $validatedData['debit'],
+                'transaction_remarks' => $validatedData['note'],
+                'added_user_id' => $user->id,
+                'company_id' => $customer->company_id,
+                'branch_id' => $customer->branch_id,
+                'customer_id' => $validatedData['customer_id'],
+                'transaction_id' => $transaction->transaction_id,
+            ]);
+
+            $responseData[] = [
+                'customer_id' => $voucher->customer_id,
+                'date' => $voucher->voucher_date,
+                'credit' => $voucher->credit,
+                'debit' => $voucher->debit,
+                'note' => $voucher->transaction_remarks,
+            ];
+
+            return response()->json(['success' => true, 'message' => 'Voucher added successfully', 'added_voucher' => $responseData], 200);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+    // add voucher
+
     // update customer
     public function updateCustomer(Request $request)
     {
