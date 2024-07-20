@@ -42,7 +42,17 @@ class ApiController extends Controller
 
     //----------------------------------------------------kitchen screen APIs------------------------------------------------------//
     // create order from mobile app
+    public function createOrderFromApp(Request $request)
+    {
+        try {
+            
+            $user = Auth::user();
 
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
     // create order from mobile app
     
     // get transactions
@@ -118,7 +128,7 @@ class ApiController extends Controller
 
             $voucher->delete();
 
-            return response()->json(['success' => true, 'message' => 'Voucher deleted'], 200);
+            return response()->json(['success' => true, 'message' => 'Voucher deleted', 'deleted_voucher' => $voucher->voucher_id], 200);
 
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
