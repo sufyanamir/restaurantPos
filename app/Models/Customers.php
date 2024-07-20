@@ -14,6 +14,11 @@ class Customers extends Model
         return $this->belongsTo(Company::class, 'company_id');
     }
 
+    public function transactions()
+    {
+        return $this->hasMany(Trasanctions::class, 'customer_id');
+    }
+
 
     protected $table = 'customers';
 
