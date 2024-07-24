@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\api;
 
+use App\Events\OrderCreated;
 use App\Http\Controllers\Controller;
 use App\Mail\forgotPasswordMail;
 use App\Mail\StaffRegistrationMail;
@@ -179,6 +180,9 @@ class ApiController extends Controller
             }
 
             DB::commit();
+
+            $broadcast = broadcast(new OrderCreated($order))->toOthers();
+            // dd($broadcast);
 
             return response()->json(['success' => true, 'message' => 'Order Created!', 'createdAt' => (int) $order->order_no, 'isUploaded' => $order->is_uploaded, 'status' => $order->status], 200);
         } catch (\Exception $e) {
