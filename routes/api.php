@@ -78,6 +78,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //Order
     Route::post('/createOrder', [ApiController::class, 'createOrder']);
     Route::post('/createOrderFromApp', [ApiController::class, 'createOrderFromApp']);
+    ROute::post('/updateOrderFromApp', [ApiController::class, 'updateOrderFromApp']);
     // Route::get('/getOrders', [ApiController::class, 'getOrders']);
     Route::match(['get', 'post'], '/getOrders', [ApiController::class, 'getOrders']);
     Route::get('/getOrder', [ApiController::class, 'getOrderDetails']);
