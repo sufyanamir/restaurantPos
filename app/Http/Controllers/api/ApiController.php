@@ -622,7 +622,7 @@ class ApiController extends Controller
     public function getCustomers()
     {
         $user = Auth::user();
-        $customers = Customers::where('company_id', $user->company_id)->where('branch_id', $user->user_branch)->get();
+        $customers = Customers::where('company_id', $user->company_id)->where('branch_id', $user->user_branch)->where('added_user_id', $user->id)->get();
 
         $responseData = [];
         foreach ($customers as $customer) {
