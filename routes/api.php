@@ -125,6 +125,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/updateVoucher', [ApiController::class, 'updateVoucher']);
     Route::post('/addVoucher', [ApiController::class, 'addVoucher']);
 
+    Route::post('/appDashboard', [ApiController::class, 'appDashboard']);
+
 });
 
 Route::middleware('auth:sanctum')->post('/logout', [ApiController::class, 'logout']);

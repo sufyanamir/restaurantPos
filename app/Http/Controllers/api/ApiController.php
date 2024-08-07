@@ -42,6 +42,39 @@ class ApiController extends Controller
     protected $appUrl = 'https://adminpos.thewebconcept.com/';
 
     //----------------------------------------------------kitchen screen APIs------------------------------------------------------//
+    // app dashboard
+    public function appDashboard(Request $request)
+    {
+        try {
+            $user = Auth::user();
+
+            $filterBy = $request->input('filterBy');
+            $query = Orders::where('added_user_id', $user->id);
+
+            switch ($filterBy) {
+                case 'today':
+                    $query->whereDate('created_at', today());
+                    break;
+                case 'weekly':
+                    $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
+                    break;
+                case 'monthly':
+                    $query->whereMonth('created_at', now()->month);
+                    break;
+            }
+
+            $takeAwayOrders = (clone $query)->where('order_type', 'takeAway')->count();
+            $dineInOrders = (clone $query)->where('order_type', 'dineIn')->count();
+            $deliveryOrders = (clone $query)->where('order_type', 'delivery')->count();
+            $totalOrders = $query->count();
+
+            return response()->json(['success' => true, 'data' => ['totaOrders' => $totalOrders, 'takeAwayOrders' => $takeAwayOrders, 'dineInOrders' => $dineInOrders, 'deliveryOrders' => $deliveryOrders]], 200);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+    // app dashboard
+
     // update order from mobile app
     public function updateOrderFromApp(Request $request)
     {
