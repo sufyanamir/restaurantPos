@@ -714,7 +714,7 @@ class ApiController extends Controller
         $branchId = $request->input('branch_id');
 
         if ($user->user_role != 'admin') {
-            $branchId = $user->branch_id;
+            $branchId = $user->user_branch;
         }
 
         if ($user->user_role == 'admin') {
