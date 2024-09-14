@@ -131,7 +131,7 @@
                                 </p>
                             </div>
                             <!-- Email Address -->
-                            <div class="w-100" style="padding-left: 15px;">
+                            <!-- <div class="w-100" style="padding-left: 15px;">
                                 <p
                                     style="font-style: normal; font-weight: 400;font-size: 16px;line-height: 24px;color: #000000;margin-bottom: 0px !important;">
                                     @lang('lang.If_you_dont_have_an_account')
@@ -140,7 +140,7 @@
                                     @lang('lang.you_can')
                                     <a href="/register" style="color: #f37e17">@lang('lang.register_here')</a>
                                 </p>
-                            </div>
+                            </div> -->
                             <label class="ml-3 mb-0 lbl-text" for="">@lang('lang.email')</label>
                             <div class="input-group col-lg-12 mb-4">
 

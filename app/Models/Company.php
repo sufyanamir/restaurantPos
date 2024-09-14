@@ -56,6 +56,7 @@ public function customers()
         'ui_layout',
         'print_bill_border',
         'closing_time',
+        'color_palette',
     ];
 
     public $timestamps = true;
