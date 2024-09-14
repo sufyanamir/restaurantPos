@@ -2855,7 +2855,7 @@ class ApiController extends Controller
                 'uiLayout' => $company->ui_layout,
                 'printBillBorder' => $company->print_bill_border,
                 'closingTime' => $company->closing_time,
-                'colorPalette' => $company->color_palette,
+                'colorPalette' => json_decode($company->color_palette),
             ];
 
             return response()->json(['success' => true, 'data' => ['company_details' => $companyDetails]], 200);
@@ -2905,7 +2905,7 @@ class ApiController extends Controller
             $company->ui_layout = $validatedData['uiLayout'];
             $company->print_bill_border = $validatedData['printBillBorder'];
             $company->closing_time = $validatedData['closingTime'];
-            $company->colorPalette = json_encode($validatedData['closingTime']);
+            $company->color_palette = json_encode($validatedData['colorPalette']);
 
             $company->save();
 
