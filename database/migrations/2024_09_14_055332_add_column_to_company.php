@@ -14,8 +14,8 @@ return new class extends Migration
     public function up()
     {
         Schema::table('company', function (Blueprint $table) {
-            $table->text('color_palette')->default(`
-            "primary": {
+            $table->text('color_palette')->default('{
+        "primary": {
             "main": "#de1616",
             "light": "#f00000"
         },
@@ -24,7 +24,7 @@ return new class extends Migration
             "light": "#ffcad4",
             "gray": "#FAFAFA"
         }
-            `);
+    }');
         });
     }
 
