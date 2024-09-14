@@ -2923,7 +2923,7 @@ class ApiController extends Controller
                 'uiLayout' => $company->ui_layout,
                 'printBillBorder' => $company->print_bill_border,
                 'closingTime' => $company->closing_time,
-                'colorPalette' => $company->color_palette,
+                'colorPalette' => json_decode($company->color_palette),
             ]]], 200);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
