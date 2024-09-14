@@ -2855,6 +2855,7 @@ class ApiController extends Controller
                 'uiLayout' => $company->ui_layout,
                 'printBillBorder' => $company->print_bill_border,
                 'closingTime' => $company->closing_time,
+                'colorPalette' => $company->color_palette,
             ];
 
             return response()->json(['success' => true, 'data' => ['company_details' => $companyDetails]], 200);
@@ -2883,6 +2884,7 @@ class ApiController extends Controller
                 'uiLayout' => 'nullable',
                 'printBillBorder' => 'nullable',
                 'closingTime' => 'nullable',
+                'colorPalette' => 'nullable',
             ]);
 
             $company = Company::where('company_id', $user->company_id)->first();
@@ -2903,6 +2905,7 @@ class ApiController extends Controller
             $company->ui_layout = $validatedData['uiLayout'];
             $company->print_bill_border = $validatedData['printBillBorder'];
             $company->closing_time = $validatedData['closingTime'];
+            $company->colorPalette = json_encode($validatedData['closingTime']);
 
             $company->save();
 
@@ -2920,6 +2923,7 @@ class ApiController extends Controller
                 'uiLayout' => $company->ui_layout,
                 'printBillBorder' => $company->print_bill_border,
                 'closingTime' => $company->closing_time,
+                'colorPalette' => $company->color_palette,
             ]]], 200);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
