@@ -870,6 +870,7 @@ class ApiController extends Controller
                 'updatedOrderCartItems' => json_decode($order->updatedOrder),
                 'orderHistory' => $order->order_history,
                 'orderDateTime' => $order->order_date_time,
+                'serviceCharges' => $order->service_charges,
             ];
         });
 
