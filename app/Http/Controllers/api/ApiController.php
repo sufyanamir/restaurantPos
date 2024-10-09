@@ -892,7 +892,7 @@ class ApiController extends Controller
                 'userId' => 'required|numeric',
                 'id' => 'required|numeric',
                 'createdAt' => 'required',
-                'type' => 'required|string',
+                'type' => 'nullable|string',
                 'split' => 'nullable|numeric',
                 'splittedAmount' => 'nullable|numeric',
                 'subTotal' => 'required|numeric',
@@ -928,6 +928,9 @@ class ApiController extends Controller
                 'orderHistory' => 'nullable',
                 'orderDateTime' => 'nullable',
             ]);
+
+            // Set default value for 'type' if not provided
+        $validatedData['type'] = $validatedData['type'] ?? 'dineIn';
 
             // // Convert createdAt from milliseconds to a DateTime object
             // $createdAtMilliseconds = $validatedData['createdAt'];
