@@ -947,9 +947,17 @@ class ApiController extends Controller
 
             $validatedData['createdAt'] = (string) $validatedData['createdAt'];
 
+            $existingOrder = Orders::with('order_items', 'additional_items')->where('order_no', $validatedData['createdAt'])->first();
             // Check if order_no (createdAt) already exists in the database
-            if (Orders::where('order_no', $validatedData['createdAt'])->exists()) {
-                return response()->json(['success' => false, 'message' => 'Order number already exists.'], 400);
+            if ($existingOrder) {
+                // Delete related order items and additional items first
+                $existingOrder->order_items()->delete();
+                $existingOrder->additional_items()->delete();
+                
+                // Now, delete the main order
+                $existingOrder->delete();
+                
+                // return response()->json(['success' => true, 'message' => 'Order and related items deleted successfully.'], 200);
             }
 
             $orderedUser = User::where('id', $validatedData['userId'])->first();
