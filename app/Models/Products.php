@@ -39,6 +39,7 @@ class Products extends Model
         'app_url',
         'branch_id',
         'favourite_item',
+        'product_status',
     ];
 
     public $timestamps = true;
