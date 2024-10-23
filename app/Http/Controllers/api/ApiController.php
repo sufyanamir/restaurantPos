@@ -1490,17 +1490,7 @@ class ApiController extends Controller
                 return response()->json(['success' => false, 'message' => 'No products found!'], 404);
             }
 
-            // Delete associated overheads.
-            $product->variations()->delete();
-            $product->add_ons()->delete();
-
-            $path = 'storage/product_images/' . $product->product_image;
-
-            if (File::exists($path)) {
-                File::delete($path);
-            }
-
-            $product->delete();
+            $product->product_status = 0;
 
             return response()->json(['success' => true, 'message' => 'product deleted successfully!'], 200);
         } catch (\Exception $e) {
@@ -1520,11 +1510,13 @@ class ApiController extends Controller
                 $products = Products::with(['variations', 'add_ons'])
                     ->where('company_id', $user->company_id)
                     ->where('branch_id', $user->user_branch)
+                    ->where('product_status', 1)
                     ->orderBy('product_id', 'desc')
                     ->get();
             } else {
                 $products = Products::with(['variations', 'add_ons'])
                     ->where('company_id', $user->company_id)
+                    ->where('product_status', 1)
                     ->orderBy('product_id', 'desc')
                     ->get();
             }
@@ -1601,6 +1593,7 @@ class ApiController extends Controller
             $existingProduct = Products::where('product_name', $validatedData['product_name'])
                 ->where('product_code', $validatedData['product_code'])
                 ->where('company_id', $user->company_id)
+                ->where('product_status', 1)
                 ->first();
 
             if ($existingProduct) {
