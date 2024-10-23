@@ -1735,7 +1735,11 @@ class ApiController extends Controller
             // Old one 
 
             $productCategories = ProductCategory::where(function ($query) use ($user) {
-                $query->where('company_id', $user->company_id);
+                $query->where('company_id', $user->company_id)
+                      ->where(function ($query) use ($user) {
+                          $query->where('branch_id', $user->user_branch)
+                                ->orWhere('branch_id', 'all');
+                      });
             })->orderBy('category_name', 'asc')->get();
 
 
