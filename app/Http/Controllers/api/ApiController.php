@@ -1506,20 +1506,27 @@ class ApiController extends Controller
         $user = Auth::user();
 
         try {
+            // Step 1: Fetch eligible categories
+            $categories = ProductCategory::where('company_id', $user->company_id)
+            ->where(function ($query) use ($user) {
+                $query->where('branch_id', 'all')
+                    ->orWhere('branch_id', $user->user_branch);
+            })
+            ->pluck('category_id'); // assuming 'id' is the primary key for ProductCategory
+
+            // Step 2: Fetch products belonging to those categories
+            $productQuery = Products::with(['variations', 'add_ons'])
+                ->where('company_id', $user->company_id)
+                ->where('product_status', 1)
+                ->whereIn('category_id', $categories)
+                ->orderBy('product_id', 'desc');
+
+            // If the user is not an admin, filter by branch as well
             if ($user->user_role != 'admin') {
-                $products = Products::with(['variations', 'add_ons'])
-                    ->where('company_id', $user->company_id)
-                    ->where('branch_id', $user->user_branch)
-                    ->where('product_status', 1)
-                    ->orderBy('product_id', 'desc')
-                    ->get();
-            } else {
-                $products = Products::with(['variations', 'add_ons'])
-                    ->where('company_id', $user->company_id)
-                    ->where('product_status', 1)
-                    ->orderBy('product_id', 'desc')
-                    ->get();
+                $productQuery->where('branch_id', $user->user_branch);
             }
+
+            $products = $productQuery->get();
 
             if ($products->count() > 0) {
                 $formattedProducts = $products->map(function ($product) {
@@ -1734,11 +1741,13 @@ class ApiController extends Controller
             // })->orderBy('category_id', 'desc')->get();
             // Old one 
 
-            $productCategories = ProductCategory::where(function ($query) use ($user) {
-                $query->where('company_id', $user->company_id);
-            })->orderBy('category_name', 'asc')->get();
-
-
+            $productCategories = ProductCategory::where('company_id', $user->company_id)
+            ->where(function ($query) use ($user) {
+                $query->where('branch_id', 'all')
+                    ->orWhere('branch_id', $user->user_branch);
+            })
+            ->orderBy('category_name', 'asc')
+            ->get();
 
             if ($productCategories->count() > 0) {
                 return response()->json(['success' => true, 'data' => ['product_categories' => $productCategories]], 200);
