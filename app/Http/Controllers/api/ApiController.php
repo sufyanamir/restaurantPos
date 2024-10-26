@@ -1522,9 +1522,9 @@ class ApiController extends Controller
                 ->orderBy('product_id', 'desc');
 
             // If the user is not an admin, filter by branch as well
-            if ($user->user_role != 'admin') {
-                $productQuery->where('branch_id', $user->user_branch);
-            }
+            // if ($user->user_role != 'admin') {
+            //     $productQuery->where('branch_id', $user->user_branch);
+            // }
 
             $products = $productQuery->get();
 
