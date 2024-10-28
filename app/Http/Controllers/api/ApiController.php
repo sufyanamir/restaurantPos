@@ -1098,7 +1098,10 @@ class ApiController extends Controller
         if ($user->user_role == 'admin') {
             $tables = RestaurantTables::where('company_id', $user->company_id)->get();
         } else {
-            $tables = RestaurantTables::where(['compnay_id', $user->company_id, 'branch_id' => $user->user_branch])->get();
+            $tables = RestaurantTables::where([
+                'company_id' => $user->company_id,
+                'branch_id' => $user->user_branch
+            ])->get();
         }
 
         // Use map to rename the column
