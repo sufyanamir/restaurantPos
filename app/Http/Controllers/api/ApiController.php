@@ -2866,7 +2866,16 @@ class ApiController extends Controller
         $user = Auth::user();
         try {
             $company = Company::find($user->company_id);
+            $branchAddress = null;
+            $branchPhone = null;
 
+            if ($user->user_branch != null) {
+                $branch = CompanyBranch::where('branch_id', $user->user_branch)->first();
+                if ($branch) {
+                    $branchAddress = $branch->branch_address;
+                    $branchPhone = $branch->branch_phone;
+                }
+            }
             $companyDetails = [
                 'company_id' => $company->company_id,
                 'companyName' => $company->company_name,
@@ -2884,18 +2893,9 @@ class ApiController extends Controller
                 'printBillBorder' => $company->print_bill_border,
                 'closingTime' => $company->closing_time,
                 'colorPalette' => json_decode($company->color_palette),
+                'branchAddress' => $branchAddress,
+                'branchPhone' => $branchPhone,
             ];
-
-            if ($user->user_branch != null) {
-                $branch = CompanyBranch::where('branch_id', $user->user_branch)->first();
-                if ($branch) {
-                    $companyDetails['branch_address'] = $branch->branch_address;
-                    $companyDetails['branch_phone'] = $branch->branch_phone;
-                }
-            }else{
-                $companyDetails['branch_address'] = null;
-                $companyDetails['branch_phone'] = null;
-            }
 
             return response()->json(['success' => true, 'data' => ['company_details' => $companyDetails]], 200);
         } catch (\Exception $e) {
