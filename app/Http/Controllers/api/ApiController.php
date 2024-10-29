@@ -2886,6 +2886,17 @@ class ApiController extends Controller
                 'colorPalette' => json_decode($company->color_palette),
             ];
 
+            if ($user->user_branch != null) {
+                $branch = CompanyBranch::where('branch_id', $user->user_branch)->first();
+                if ($branch) {
+                    $companyDetails['branch_address'] = $branch->branch_address;
+                    $companyDetails['branch_phone'] = $branch->branch_phone;
+                }
+            }else{
+                $companyDetails['branch_address'] = null;
+                $companyDetails['branch_phone'] = null;
+            }
+
             return response()->json(['success' => true, 'data' => ['company_details' => $companyDetails]], 200);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
