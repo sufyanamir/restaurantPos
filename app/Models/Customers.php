@@ -33,6 +33,7 @@ class Customers extends Model
         'customer_phone',
         'customer_address',
         'opening_balance',
+        'type',
     ];
 
     public $timestamps = true;

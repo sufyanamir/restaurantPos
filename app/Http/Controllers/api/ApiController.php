@@ -26,6 +26,9 @@ use App\Models\Company;
 use App\Models\CompanyBranch;
 use App\Models\CompanyExpense;
 use App\Models\imageGallery;
+use App\Models\Inventory;
+use App\Models\InventoryMinus;
+use App\Models\InventoryPlus;
 use App\Models\Kitchen;
 use App\Models\OrderAdditionalItems;
 use App\Models\ProductCategory;
@@ -40,6 +43,195 @@ use Illuminate\Validation\Rules\Unique;
 class ApiController extends Controller
 {
     protected $appUrl = 'https://adminpos.thewebconcept.com/';
+
+    //----------------------------------------------------Inventory APIs------------------------------------------------------//
+    // inventory minus
+    public function addInventoryMinus(Request $request)
+    {
+        try {
+            $user = Auth::user();
+
+            $validatedData = $request->validate([
+                'dpt_name' => 'required',
+                'inv_m_date' => 'required',
+                'dpt_phone' => 'required',
+                'dpt_note' => 'required',
+                'inv_order_details' => 'required|array',
+                'inv_m_total' => 'required',
+                'inv_m_paid' => 'required',
+            ]);
+
+            $orderDetails = $validatedData['inv_order_details'];
+
+            foreach ($orderDetails as $detail) {
+                if (!isset($detail['inventory_id'])) {
+                    return response()->json(['success' => false, 'message' => 'Inventory ID is missing in order details'], 400);
+                }
+
+                $inventory = Inventory::find($detail['inventory_id']);
+                if (!$inventory) {
+                    return response()->json(['success' => false, 'message' => "Inventory not found for ID: {$detail['inventory_id']}"], 404);
+                }
+
+                $inventory->inventory_stockinhand -= $detail['inventory_minus_qty'];
+                $inventory->save();
+            }
+
+            $inventoryMinus = InventoryMinus::create([
+                'company_id' => $user->company_id,
+                'branch_id' => $user->user_branch,
+                'dpt_name' => $validatedData['dpt_name'],
+                'added_user_id' => $user->id,
+                'inv_m_date' => $validatedData['inv_m_date'],
+                'dpt_phone' => $validatedData['dpt_phone'],
+                'dpt_note' => $validatedData['dpt_note'],
+                'inv_order_details' => json_encode($validatedData['inv_order_details']),
+                'inv_m_total' => $validatedData['inv_m_total'],
+                'inv_m_paid' => $validatedData['inv_m_paid'],
+            ]);
+
+            return response()->json(['success' => true, 'message' => 'Inventory Minus added successfully!', 'inventoryMinus' => $inventoryMinus], 200);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+    // inventory minus
+
+    // inventory plus
+    public function addInventoryPlus(Request $request)
+    {
+        try {
+            $user = Auth::user();
+
+            $validatedData = $request->validate([
+                'supplier_id' => 'required',
+                'inv_p_date' => 'required',
+                'supplier_phone' => 'required',
+                'supplier_note' => 'required',
+                'inv_order_details' => 'required|array',
+                'inv_p_total' => 'required',
+                'inv_p_paid' => 'required',
+            ]);
+
+            // Find and validate each inventory item in inv_order_details
+            $orderDetails = $validatedData['inv_order_details'];
+            foreach ($orderDetails as $detail) {
+                if (!isset($detail['inventory_id'])) {
+                    return response()->json(['success' => false, 'message' => 'Inventory ID is missing in order details'], 400);
+                }
+
+                $inventory = Inventory::find($detail['inventory_id']);
+                if (!$inventory) {
+                    return response()->json(['success' => false, 'message' => "Inventory not found for ID: {$detail['inventory_id']}"], 404);
+                }
+
+                $inventory->inventory_stockinhand += $detail['inventory_purchase_qty'];
+                $inventory->save();
+            }
+
+            $inventoryPlus = InventoryPlus::create([
+                'company_id' => $user->company_id,
+                'branch_id' => $user->user_branch,
+                'supplier_id' => $validatedData['supplier_id'],
+                'added_user_id' => $user->id,
+                'inv_p_date' => $validatedData['inv_p_date'],
+                'supplier_phone' => $validatedData['supplier_phone'],
+                'supplier_note' => $validatedData['supplier_note'],
+                'inv_order_details' => json_encode($validatedData['inv_order_details']),
+                'inv_p_total' => $validatedData['inv_p_total'],
+                'inv_p_paid' => $validatedData['inv_p_paid'],
+            ]);
+
+            return response()->json(['success' => true, 'message' => 'Inventory Plus added successfully!', 'inventoryPlus' => $inventoryPlus], 200);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+    // inventory plus
+
+    // get inventory
+    public function getInventory()
+    {
+        try {
+            $user = Auth::user();
+
+            $inventory = Inventory::with('company', 'branch', 'supplier', 'user')->where('company_id', $user->company_id)->where('branch_id', $user->user_branch)->get();
+
+            if (!$inventory) {
+                return response()->json(['success' => false, 'message' => 'Inventory not found'], 404);
+            }
+
+            return response()->json(['success' => true, 'inventory' => $inventory], 200);
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+    }
+    // get inventory
+
+    // add inventory
+    public function addInventory(Request $request)
+    {
+        try {
+            $inventoryId = $request->input('inventory_id');
+            $user = Auth::user();
+
+            $validatedData = $request->validate([
+                'supplier_id' => 'required',
+                'inv_name' => 'required',
+                'inv_stockinhand' => 'required',
+                'inv_unit' => 'required',
+                'inv_box_price' => 'required',
+                'inv_bag_qty' => 'required',
+                'inv_unit_price' => 'required',
+                'low_stock' => 'required',
+                'inv_type' => 'required',
+            ]);
+
+            if ($inventoryId) {
+                $inventory = Inventory::find($inventoryId);
+                if (!$inventory) {
+                    return response()->json(['success' => false, 'message' => 'Inventory not found'], 404);
+                }
+                $inventory->update([
+                    'company_id' => $user->company_id,
+                    'branch_id' => $user->user_branch,
+                    'supplier_id' => $validatedData['supplier_id'],
+                    'added_user_id' => $user->id,
+                    'inv_name' => $validatedData['inv_name'],
+                    'inv_stockinhand' => $validatedData['inv_stockinhand'],
+                    'inv_unit' => $validatedData['inv_unit'],
+                    'inv_box_price' => $validatedData['inv_box_price'],
+                    'inv_bag_qty' => $validatedData['inv_bag_qty'],
+                    'inv_unit_price' => $validatedData['inv_unit_price'],
+                    'low_stock' => $validatedData['low_stock'],
+                    'inv_type' => $validatedData['inv_type'],
+                ]);
+
+                return response()->json(['success' => true, 'message' => 'Inventory updated successfully!', 'inventory' => $inventory], 200);
+            } else {
+                $inventory = Inventory::create([
+                    'company_id' => $user->company_id,
+                    'branch_id' => $user->user_branch,
+                    'supplier_id' => $validatedData['supplier_id'],
+                    'added_user_id' => $user->id,
+                    'inv_name' => $validatedData['inv_name'],
+                    'inv_stockinhand' => $validatedData['inv_stockinhand'],
+                    'inv_unit' => $validatedData['inv_unit'],
+                    'inv_box_price' => $validatedData['inv_box_price'],
+                    'inv_bag_qty' => $validatedData['inv_bag_qty'],
+                    'inv_unit_price' => $validatedData['inv_unit_price'],
+                    'low_stock' => $validatedData['low_stock'],
+                    'inv_type' => $validatedData['inv_type'],
+                ]);
+            }
+
+            return response()->json(['success' => true, 'message' => 'Inventory added successfully!', 'inventory' => $inventory], 200);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+    // add inventory
+    //----------------------------------------------------Inventory APIs------------------------------------------------------//
 
     //----------------------------------------------------kitchen screen APIs------------------------------------------------------//
     // app dashboard
@@ -618,6 +810,37 @@ class ApiController extends Controller
     }
     // update customer
 
+    // get suppliers
+    public function getSuppliers()
+    {
+        try {
+            $user = Auth::user();
+
+            $suppliers = Customers::where('company_id', $user->company_id)->where('branch_id', $user->user_branch)->where('type', 'supplier')->get();
+
+            if (!$suppliers) {
+                return response()->json(['success' => false, 'message' => 'Suppliers not found'], 404);
+            }
+
+            $responseData = [];
+            foreach ($suppliers as $supplier) {
+                $responseData[] = [
+                    'customer_id' => $supplier->customer_id,
+                    'customerName' => $supplier->customer_name,
+                    'customer_email' => $supplier->customer_email,
+                    'phone' => $supplier->customer_phone,
+                    'address' => $supplier->customer_address,
+                    'openingBalance' => $supplier->opening_balance,
+                ];
+            }
+
+            return response()->json(['success' => true, 'data' => $responseData], 200);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+    // get suppliers
+
     // get customer
     public function getCustomers()
     {
@@ -646,6 +869,7 @@ class ApiController extends Controller
         try {
 
             $user = Auth::user();
+            $customerType = $request->input('type');
 
             $validatedData = $request->validate([
                 'customerName' => 'required|string',
@@ -655,46 +879,73 @@ class ApiController extends Controller
                 'customer_email' => 'nullable',
             ]);
 
-            $existingCustomer = Customers::where('company_id', $user->company_id)
-                ->where('branch_id', $user->user_branch)
-                ->where('customer_phone', $validatedData['phone'])
-                ->first();
+            if ($customerType == 'supplier') {
 
-            if ($existingCustomer) {
-                return response()->json(['success' => false, 'message' => 'Customer with this phone number already exists.'], 400);
-            }
-
-            $customer = Customers::create([
-                'company_id' => $user->company_id,
-                'branch_id' => $user->user_branch,
-                'added_user_id' => $user->id,
-                'customer_name' => $validatedData['customerName'],
-                'customer_email' => $validatedData['customer_email'],
-                'customer_phone' => $validatedData['phone'],
-                'customer_address' => $validatedData['address'],
-                'opening_balance' => $validatedData['openingBalance'],
-            ]);
-
-            if ($validatedData['openingBalance'] != null && $validatedData['openingBalance'] > 0) {
-                $transaction = Trasanctions::create([
+                $supplier = Customers::create([
                     'company_id' => $user->company_id,
                     'branch_id' => $user->user_branch,
                     'added_user_id' => $user->id,
-                    'customer_id' => $customer->customer_id,
+                    'customer_name' => $validatedData['customerName'],
+                    'customer_email' => $validatedData['customer_email'],
+                    'customer_phone' => $validatedData['phone'],
+                    'customer_address' => $validatedData['address'],
+                    'opening_balance' => $validatedData['openingBalance'],
+                    'type' => 'supplier',
+                ]);
+
+                $responseData = [
+                    'customer_id' => $supplier->customer_id,
+                    'customerName' => $supplier->customer_name,
+                    'customer_email' => $supplier->customer_email,
+                    'phone' => $supplier->customer_phone,
+                    'address' => $supplier->customer_address,
+                    'openingBalance' => $supplier->opening_balance,
+                ];
+
+                return response()->json(['success' => true, 'message' => 'Supplier added successfully!', 'added_supplier' => $responseData], 200);
+
+            } else {
+                $existingCustomer = Customers::where('company_id', $user->company_id)
+                    ->where('branch_id', $user->user_branch)
+                    ->where('customer_phone', $validatedData['phone'])
+                    ->first();
+
+                if ($existingCustomer) {
+                    return response()->json(['success' => false, 'message' => 'Customer with this phone number already exists.'], 400);
+                }
+
+                $customer = Customers::create([
+                    'company_id' => $user->company_id,
+                    'branch_id' => $user->user_branch,
+                    'added_user_id' => $user->id,
+                    'customer_name' => $validatedData['customerName'],
+                    'customer_email' => $validatedData['customer_email'],
+                    'customer_phone' => $validatedData['phone'],
+                    'customer_address' => $validatedData['address'],
                     'opening_balance' => $validatedData['openingBalance'],
                 ]);
+
+                if ($validatedData['openingBalance'] != null && $validatedData['openingBalance'] > 0) {
+                    $transaction = Trasanctions::create([
+                        'company_id' => $user->company_id,
+                        'branch_id' => $user->user_branch,
+                        'added_user_id' => $user->id,
+                        'customer_id' => $customer->customer_id,
+                        'opening_balance' => $validatedData['openingBalance'],
+                    ]);
+                }
+
+                $responseData = [
+                    'customer_id' => $customer->customer_id,
+                    'customerName' => $customer->customer_name,
+                    'customer_email' => $customer->customer_email,
+                    'phone' => $customer->customer_phone,
+                    'address' => $customer->customer_address,
+                    'openingBalance' => $customer->opening_balance,
+                ];
+
+                return response()->json(['success' => true, 'message' => 'Customer added successfully!', 'added_customer' => $responseData], 200);
             }
-
-            $responseData = [
-                'customer_id' => $customer->customer_id,
-                'customerName' => $customer->customer_name,
-                'customer_email' => $customer->customer_email,
-                'phone' => $customer->customer_phone,
-                'address' => $customer->customer_address,
-                'openingBalance' => $customer->opening_balance,
-            ];
-
-            return response()->json(['success' => true, 'message' => 'Customer added successfully!', 'added_customer' => $responseData], 200);
         } catch (\Exception $e) {
             return response()->json(['scuccess' => false, 'message' => $e->getMessage()], 400);
         }
@@ -930,7 +1181,7 @@ class ApiController extends Controller
             ]);
 
             // Set default value for 'type' if not provided
-        $validatedData['type'] = $validatedData['type'] ?? 'dineIn';
+            $validatedData['type'] = $validatedData['type'] ?? 'dineIn';
 
             // // Convert createdAt from milliseconds to a DateTime object
             // $createdAtMilliseconds = $validatedData['createdAt'];
@@ -953,10 +1204,10 @@ class ApiController extends Controller
                 // Delete related order items and additional items first
                 $existingOrder->order_items()->delete();
                 $existingOrder->additional_items()->delete();
-                
+
                 // Now, delete the main order
                 $existingOrder->delete();
-                
+
                 // return response()->json(['success' => true, 'message' => 'Order and related items deleted successfully.'], 200);
             }
 
@@ -1512,14 +1763,14 @@ class ApiController extends Controller
             // Step 1: Fetch eligible categories
             if ($user->user_role = 'admin') {
                 $categories = ProductCategory::where('company_id', $user->company_id)
-                ->pluck('category_id'); // assuming 'id' is the primary key for ProductCategory
-            }else{
+                    ->pluck('category_id'); // assuming 'id' is the primary key for ProductCategory
+            } else {
                 $categories = ProductCategory::where('company_id', $user->company_id)
-                ->where(function ($query) use ($user) {
-                    $query->where('branch_id', 'all')
-                        ->orWhere('branch_id', $user->user_branch);
-                })
-                ->pluck('category_id'); // assuming 'id' is the primary key for ProductCategory
+                    ->where(function ($query) use ($user) {
+                        $query->where('branch_id', 'all')
+                            ->orWhere('branch_id', $user->user_branch);
+                    })
+                    ->pluck('category_id'); // assuming 'id' is the primary key for ProductCategory
             }
 
             // Step 2: Fetch products belonging to those categories
@@ -1750,17 +2001,16 @@ class ApiController extends Controller
             // Old one 
             if ($user->user_role == 'admin') {
                 $productCategories = ProductCategory::where('company_id', $user->company_id)
-                ->orderBy('category_name', 'asc')
-                ->get();
-            }else{
+                    ->orderBy('category_name', 'asc')
+                    ->get();
+            } else {
                 $productCategories = ProductCategory::where('company_id', $user->company_id)
-                ->where(function ($query) use ($user) {
-                    $query->where('branch_id', 'all')
-                        ->orWhere('branch_id', $user->user_branch);
-                })
-                ->orderBy('category_name', 'asc')
-                ->get();
-
+                    ->where(function ($query) use ($user) {
+                        $query->where('branch_id', 'all')
+                            ->orWhere('branch_id', $user->user_branch);
+                    })
+                    ->orderBy('category_name', 'asc')
+                    ->get();
             }
 
             if ($productCategories->count() > 0) {

@@ -23,6 +23,18 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 
 Route::middleware('auth:sanctum')->group(function () {
+    // Supplier apis
+    Route::post('/addSupplier', [ApiController::class, 'addCustomer']);
+    Route::get('/getSuppliers', [ApiController::class, 'getSuppliers']);
+    // Supplier apis
+
+    // Inventory apis
+    Route::post('/addInventory', [ApiController::class, 'addInventory']);
+    Route::get('/getInventory', [ApiController::class, 'getInventory']);
+    Route::post('/addInventoryPlus', [ApiController::class, 'addInventoryPlus']);
+    Route::post('/addInventoryMinus', [ApiController::class, 'addInventoryMinus']);
+    // Inventory apis
+
     // table apis
     Route::post('/addTable', [ApiController::class, 'addTable']);
     Route::post('/updateTable', [ApiController::class, 'updateTable']);
