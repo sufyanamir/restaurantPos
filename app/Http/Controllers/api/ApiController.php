@@ -45,6 +45,73 @@ class ApiController extends Controller
     protected $appUrl = 'https://adminpos.thewebconcept.com/';
 
     //----------------------------------------------------Inventory APIs------------------------------------------------------//
+    // get inventory plus
+    public function getInventoryMinus(Request $request)
+    {
+        try {
+            $fromDate = $request->query('fromDate');
+            $toDate = $request->query('toDate');
+            $filterBy = $request->query('filterBy');
+            $supplierId = $request->query('supplierId');
+
+            $user = Auth::user();
+
+            // Start building the query
+            $query = InventoryMinus::with('company', 'branch', 'user')
+                ->where('company_id', $user->company_id)
+                ->where('branch_id', $user->user_branch);
+
+            // Apply date range filter if fromDate and toDate are provided
+            if ($fromDate && $toDate) {
+                $query->whereBetween('created_at', [$fromDate, $toDate]);
+            }
+            // Apply filterBy if no date range is provided
+            elseif ($filterBy) {
+                switch ($filterBy) {
+                    case 'today':
+                        $query->whereDate('created_at', Carbon::today());
+                        break;
+                    case 'yesterday':
+                        $query->whereDate('created_at', Carbon::yesterday());
+                        break;
+                    case 'weekly':
+                        $query->whereBetween('created_at', [
+                            Carbon::now()->startOfWeek(),
+                            Carbon::now()->endOfWeek()
+                        ]);
+                        break;
+                    case 'monthly':
+                        $query->whereBetween('created_at', [
+                            Carbon::now()->startOfMonth(),
+                            Carbon::now()->endOfMonth()
+                        ]);
+                        break;
+                }
+            }
+
+            // Apply supplier filter if supplierId is provided
+            if ($supplierId) {
+                // Handle multiple supplier IDs (can be array or comma-separated string)
+                $supplierIds = is_array($supplierId) ? $supplierId : explode(',', $supplierId);
+                $query->whereIn('supplier_id', $supplierIds);
+            }
+
+            // Execute the query
+            $inventoryMinus = $query->get();
+
+            // Decode the JSON-encoded inv_order_details for each inventoryMinus record
+            $inventoryMinus->transform(function ($item) {
+                $item->inv_order_details = json_decode($item->inv_order_details, true);
+                return $item;
+            });
+
+            return response()->json(['success' => true, 'inventoryMinus' => $inventoryMinus], 200);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+    // get inventory plus
+
     // inventory minus
     public function addInventoryMinus(Request $request)
     {
@@ -96,6 +163,73 @@ class ApiController extends Controller
         }
     }
     // inventory minus
+
+    // get inventory plus
+    public function getInventoryPlus(Request $request)
+    {
+        try {
+            $fromDate = $request->query('fromDate');
+            $toDate = $request->query('toDate');
+            $filterBy = $request->query('filterBy');
+            $supplierId = $request->query('supplierId');
+
+            $user = Auth::user();
+
+            // Start building the query
+            $query = InventoryPlus::with('company', 'branch', 'supplier', 'user')
+                ->where('company_id', $user->company_id)
+                ->where('branch_id', $user->user_branch);
+
+            // Apply date range filter if fromDate and toDate are provided
+            if ($fromDate && $toDate) {
+                $query->whereBetween('created_at', [$fromDate, $toDate]);
+            }
+            // Apply filterBy if no date range is provided
+            elseif ($filterBy) {
+                switch ($filterBy) {
+                    case 'today':
+                        $query->whereDate('created_at', Carbon::today());
+                        break;
+                    case 'yesterday':
+                        $query->whereDate('created_at', Carbon::yesterday());
+                        break;
+                    case 'weekly':
+                        $query->whereBetween('created_at', [
+                            Carbon::now()->startOfWeek(),
+                            Carbon::now()->endOfWeek()
+                        ]);
+                        break;
+                    case 'monthly':
+                        $query->whereBetween('created_at', [
+                            Carbon::now()->startOfMonth(),
+                            Carbon::now()->endOfMonth()
+                        ]);
+                        break;
+                }
+            }
+
+            // Apply supplier filter if supplierId is provided
+            if ($supplierId) {
+                // Handle multiple supplier IDs (can be array or comma-separated string)
+                $supplierIds = is_array($supplierId) ? $supplierId : explode(',', $supplierId);
+                $query->whereIn('supplier_id', $supplierIds);
+            }
+
+            // Execute the query
+            $inventoryPlus = $query->get();
+
+            // Decode the JSON-encoded inv_order_details for each inventoryPlus record
+            $inventoryPlus->transform(function ($item) {
+                $item->inv_order_details = json_decode($item->inv_order_details, true);
+                return $item;
+            });
+
+            return response()->json(['success' => true, 'inventoryPlus' => $inventoryPlus], 200);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+    // get inventory plus
 
     // inventory plus
     public function addInventoryPlus(Request $request)
@@ -150,20 +284,66 @@ class ApiController extends Controller
     // inventory plus
 
     // get inventory
-    public function getInventory()
+    public function getInventory(Request $request)
     {
         try {
+            $fromDate = $request->query('fromDate');
+            $toDate = $request->query('toDate');
+            $filterBy = $request->query('filterBy');
+            $supplierId = $request->query('supplierId');
+
             $user = Auth::user();
 
-            $inventory = Inventory::with('company', 'branch', 'supplier', 'user')->where('company_id', $user->company_id)->where('branch_id', $user->user_branch)->get();
+            // Start building the query
+            $query = Inventory::with('company', 'branch', 'supplier', 'user')
+                ->where('company_id', $user->company_id)
+                ->where('branch_id', $user->user_branch);
 
-            if (!$inventory) {
+            // Apply date range filter if fromDate and toDate are provided
+            if ($fromDate && $toDate) {
+                $query->whereBetween('created_at', [$fromDate, $toDate]);
+            }
+            // Apply filterBy if no date range is provided
+            elseif ($filterBy) {
+                switch ($filterBy) {
+                    case 'today':
+                        $query->whereDate('created_at', Carbon::today());
+                        break;
+                    case 'yesterday':
+                        $query->whereDate('created_at', Carbon::yesterday());
+                        break;
+                    case 'weekly':
+                        $query->whereBetween('created_at', [
+                            Carbon::now()->startOfWeek(),
+                            Carbon::now()->endOfWeek()
+                        ]);
+                        break;
+                    case 'monthly':
+                        $query->whereBetween('created_at', [
+                            Carbon::now()->startOfMonth(),
+                            Carbon::now()->endOfMonth()
+                        ]);
+                        break;
+                }
+            }
+
+            // Apply supplier filter if supplierId is provided
+            if ($supplierId) {
+                // Handle multiple supplier IDs (can be array or comma-separated string)
+                $supplierIds = is_array($supplierId) ? $supplierId : explode(',', $supplierId);
+                $query->whereIn('supplier_id', $supplierIds);
+            }
+
+            // Execute the query
+            $inventory = $query->get();
+
+            if ($inventory->isEmpty()) {
                 return response()->json(['success' => false, 'message' => 'Inventory not found'], 404);
             }
 
             return response()->json(['success' => true, 'inventory' => $inventory], 200);
         } catch (\Throwable $th) {
-            //throw $th;
+            return response()->json(['success' => false, 'message' => $th->getMessage()], 400);
         }
     }
     // get inventory
@@ -903,7 +1083,6 @@ class ApiController extends Controller
                 ];
 
                 return response()->json(['success' => true, 'message' => 'Supplier added successfully!', 'added_supplier' => $responseData], 200);
-
             } else {
                 $existingCustomer = Customers::where('company_id', $user->company_id)
                     ->where('branch_id', $user->user_branch)
