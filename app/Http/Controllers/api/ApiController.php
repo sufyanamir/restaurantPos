@@ -34,6 +34,7 @@ use App\Models\OrderAdditionalItems;
 use App\Models\ProductCategory;
 use App\Models\Products;
 use App\Models\RestaurantTables;
+use App\Models\StaffAttendance;
 use App\Models\Trasanctions;
 use App\Models\Voucher;
 use Carbon\Carbon;
@@ -43,6 +44,135 @@ use Illuminate\Validation\Rules\Unique;
 class ApiController extends Controller
 {
     protected $appUrl = 'https://adminpos.thewebconcept.com/';
+
+    //----------------------------------------------------Attendance APIs------------------------------------------------------//
+    // get attendance
+    public function getAttendance(Request $request)
+    {
+        try {
+            $user = Auth::user();
+
+            $fromDate = $request->query('fromDate');
+            $toDate = $request->query('toDate');
+            $filterBy = $request->query('filterBy');
+            $userIds = $request->query('userIds'); // Can be single ID or comma-separated IDs
+
+            // Start building the query
+            $query = StaffAttendance::with('company', 'branch', 'user')
+                ->where('company_id', $user->company_id)
+                ->where('branch_id', $user->user_branch);
+
+            // Apply date range filter if fromDate and toDate are provided
+            if ($fromDate && $toDate) {
+                $query->whereBetween('attendance_date', [$fromDate, $toDate]);
+            }
+            // Apply filterBy if no date range is provided
+            elseif ($filterBy) {
+                switch ($filterBy) {
+                    case 'today':
+                        $query->whereDate('attendance_date', Carbon::today());
+                        break;
+                    case 'yesterday':
+                        $query->whereDate('attendance_date', Carbon::yesterday());
+                        break;
+                    case 'weekly':
+                        $query->whereBetween('attendance_date', [
+                            Carbon::now()->startOfWeek(),
+                            Carbon::now()->endOfWeek()
+                        ]);
+                        break;
+                    case 'monthly':
+                        $query->whereBetween('attendance_date', [
+                            Carbon::now()->startOfMonth(),
+                            Carbon::now()->endOfMonth()
+                        ]);
+                        break;
+                }
+            }
+
+            // Execute the query
+            $attendance = $query->get();
+
+            // Decode attendance_details and filter by userIds if provided
+            $attendance->transform(function ($item) use ($userIds) {
+                $item->attendance_details = json_decode($item->attendance_details, true);
+
+                // If userIds is provided, filter the attendance_details
+                if ($userIds) {
+                    $targetUserIds = is_array($userIds) ? $userIds : explode(',', $userIds);
+                    // Convert to integers for comparison
+                    $targetUserIds = array_map('intval', $targetUserIds);
+
+                    $item->attendance_details = array_filter($item->attendance_details, function ($detail) use ($targetUserIds) {
+                        return in_array((int)$detail['user_id'], $targetUserIds);
+                    });
+
+                    // Re-index the array after filtering
+                    $item->attendance_details = array_values($item->attendance_details);
+                }
+
+                return $item;
+            });
+
+            // Filter out records with empty attendance_details if userIds was provided
+            if ($userIds) {
+                $attendance = $attendance->filter(function ($item) {
+                    return !empty($item->attendance_details);
+                })->values();
+            }
+
+            return response()->json(['success' => true, 'attendance' => $attendance], 200);
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+    // get attendance
+
+    // add attendance
+    public function addAttendance(Request $request)
+    {
+        try {
+            $user = Auth::user();
+
+            $validatedData = $request->validate([
+                'attendance_date' => 'required|date',
+                'attendance_details' => 'required|array',
+                'attendance_details.*.user_id' => 'required|exists:users,id',
+                'attendance_details.*.start_time' => 'required|date_format:H:i',
+                'attendance_details.*.end_time' => 'required|date_format:H:i|after:attendance_details.*.start_time',
+            ]);
+
+            // Prepare the attendance details array
+            $attendanceDetails = array_map(function ($detail) {
+                return [
+                    'user_id' => $detail['user_id'],
+                    'start_time' => $detail['start_time'],
+                    'end_time' => $detail['end_time']
+                ];
+            }, $validatedData['attendance_details']);
+
+            $attendance = StaffAttendance::create([
+                'company_id' => $user->company_id,
+                'branch_id' => $user->user_branch,
+                'added_user_id' => $user->id,
+                'attendance_date' => $validatedData['attendance_date'],
+                'attendance_details' => json_encode($attendanceDetails),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Attendance added successfully!',
+                'attendance' => $attendance
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 400);
+        }
+    }
+    // add attendance
+    //----------------------------------------------------Attendance APIs------------------------------------------------------//
 
     //----------------------------------------------------Inventory APIs------------------------------------------------------//
     // get inventory plus

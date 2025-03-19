@@ -23,6 +23,11 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 
 Route::middleware('auth:sanctum')->group(function () {
+    // Attendance apis
+    Route::post('/addAttendance', [ApiController::class, 'addAttendance']);
+    Route::get('/getAttendance', [ApiController::class, 'getAttendance']);
+    // Attendance apis
+
     // Supplier apis
     Route::post('/addSupplier', [ApiController::class, 'addCustomer']);
     Route::get('/getSuppliers', [ApiController::class, 'getSuppliers']);
