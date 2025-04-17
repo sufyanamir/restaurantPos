@@ -1199,7 +1199,7 @@ class ApiController extends Controller
                     'customer_email' => $validatedData['customer_email'],
                     'customer_phone' => $validatedData['phone'],
                     'customer_address' => $validatedData['address'],
-                    'opening_balance' => $validatedData['openingBalance'],
+                    'opening_balance' => $request['openingBalance'] ?? 0,
                     'type' => 'supplier',
                 ]);
 
