@@ -26,7 +26,8 @@ return new class extends Migration
             $table->integer("inv_items_stock");
             $table->float("unit_purchase_price");
             $table->integer("inv_stock_alert");
-            $table->string("inv_auto_order")->nullable();
+            $table->string("inv_auto_   order")->nullable();
+            $table->integer("inv_unit_status")->default(1);
             $table->timestamps();
         });
     }

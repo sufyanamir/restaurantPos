@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\api\ApiController;
+use App\Http\Controllers\api\InventoryUnitController;
 use App\Http\Controllers\OrderController;
 
 
@@ -146,6 +147,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/appDashboard', [ApiController::class, 'appDashboard']);
 
+    Route::controller(InventoryUnitController::class)->group(function () {
+        Route::post('/addInventoryUnit', 'CreateUnit');
+        Route::get('/getUnits', 'getUnits');
+        Route::put('/updataUnit/{unit_id}', 'updataUnit');
+        Route::delete('/deleteUnit/{unit_id}', 'deleteUnit');
+    });
 });
 
 Route::middleware('auth:sanctum')->post('/logout', [ApiController::class, 'logout']);
