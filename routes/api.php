@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\api\ApiController;
+use App\Http\Controllers\api\InventoryCategoryController;
 use App\Http\Controllers\api\InventoryUnitController;
 use App\Http\Controllers\OrderController;
 
@@ -152,6 +153,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/getUnits', 'getUnits');
         Route::put('/updataUnit/{unit_id}', 'updataUnit');
         Route::delete('/deleteUnit/{unit_id}', 'deleteUnit');
+    });
+    Route::controller(InventoryCategoryController::class)->group(function () {
+        Route::get('/getInventoryCategories', 'getCategories');
+        Route::post('/addInventoryCategory', 'createCategory');
+        Route::put('/updataInventoryCategory/{category_id}', 'updataCategory');
+        Route::delete('/deleteInventoryCategory/{category_id}', 'deleteCategory');
     });
 });
 

@@ -48,7 +48,6 @@ class InventoryUnitController extends Controller
     {
         try {
             $user = Auth::user();
-            $user = Auth::user();
 
             $validatedData = $request->validate([
                 "inv_unit_name" => "required",

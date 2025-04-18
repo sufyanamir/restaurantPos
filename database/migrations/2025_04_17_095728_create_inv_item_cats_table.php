@@ -18,6 +18,7 @@ return new class extends Migration
             $table->integer("company_id");
             $table->integer("user_id");
             $table->string("inv_item_cats_name");
+            $table->integer("inv_item_cats_status")->default(1);
             $table->timestamps();
         });
     }
